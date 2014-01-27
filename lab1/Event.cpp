@@ -6,6 +6,14 @@ Event::Event(double arrivalTime, EventType type){
   this->type = type;
 }
 
+Event* Event::getParent(){
+  return this->parent;
+}
+
+void Event::setParent(Event * p){
+  this->parent = p;
+}
+
 double Event::getArrivalTime(){
   return this->arrivalTime;
 }

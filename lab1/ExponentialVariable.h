@@ -1,4 +1,5 @@
-
+#ifndef EXPONENTIAL_VARIABLE_H
+#define EXPONENTIAL_VARIABLE_H
 class ExponentialVariable : public RandomVariable {
   public:
     ExponentialVariable(int errorFactor, double lambda) : RandomVariable(errorFactor){
@@ -9,3 +10,5 @@ class ExponentialVariable : public RandomVariable {
     bool generateExponential(int);
 
 };
+
+#endif

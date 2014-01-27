@@ -1,6 +1,7 @@
 #include "RandomVariable.h"
 #include "ExponentialVariable.h"
 #include <cmath>
+#include <stdio.h>
 
 bool ExponentialVariable::generateExponential(int size){
   this->size = size;
@@ -10,6 +11,5 @@ bool ExponentialVariable::generateExponential(int size){
     inverse = inverse /this->lambda;
     this->values[i] = inverse;
   }
-
   return this->verifyMean((double)(1/this->lambda)) && this->verifyVariance((double)(1/(this->lambda*this->lambda)));
 }
