@@ -8,17 +8,19 @@
 #include <cmath>
 #include "Logger.h"
 #include <map>
+#include<queue>
 
 #define LOGGING 0
 
 typedef std::vector<Event*> event_set;
+typedef std::queue<Event*> dep_set;
 typedef std::vector<int> count_sample;
 typedef std::vector<double> sojourn_times;
 typedef std::map<int, bool> droppedStatus;
 
-void simulate(double T, double alpha, double lambda, double L, double C, int K){
+void simulate(double T, double alpha, double lambda, double L, double C, double K){
   event_set ao;
-  event_set d;
+  dep_set d;
   count_sample pc;
   sojourn_times st;
 
@@ -69,19 +71,19 @@ void simulate(double T, double alpha, double lambda, double L, double C, int K){
     n = (n+1) % 20000;
     Event * e;
     if(ao.size() > 0 && d.size() > 0){
-      if(ao.back()->getArrivalTime() < d.back()->getArrivalTime()){
+      if(ao.back()->getArrivalTime() < d.front()->getArrivalTime()){
         e = ao.back();
         ao.pop_back();
       }else{
-        e = d.back();
-        d.pop_back();
+        e = d.front();
+        d.pop();
       }
     }else if(ao.size() > 0){
       e = ao.back();
       ao.pop_back();
     }else if(d.size() > 0){
-      e = d.back();
-      d.pop_back();
+      e = d.front();
+      d.pop();
     }
 
     switch(e->getType()){
@@ -95,13 +97,12 @@ void simulate(double T, double alpha, double lambda, double L, double C, int K){
           double processingTime = sizes->values[n] / C;
           Event * dep;
           if(d.size() > 0){
-
-            dep = new Event((d.at(0)->getArrivalTime() + processingTime), DEPARTURE);
+            dep = new Event((d.back()->getArrivalTime() + processingTime), DEPARTURE);
           }else{
             dep = new Event((e->getArrivalTime() + processingTime), DEPARTURE);
           }
-          d.push_back(dep);
-          std::sort(d.begin(), d.end(), Event::EventPredicate2);
+          d.push(dep);
+          //std::sort(d.begin(), d.end(), Event::EventPredicate2);
           st.push_back((dep->getArrivalTime() - e->getArrivalTime()));
         }
         break;
@@ -143,7 +144,7 @@ void simulate(double T, double alpha, double lambda, double L, double C, int K){
   delete interobserver;
   delete sizes;
 
-  printf("%d,%d,%d,%d,%f,%f,%f,%f",
+  printf("%f,%d,%d,%d,%f,%f,%f,%f",
     K,
     arrivalCount,
     departureCount,
@@ -173,7 +174,7 @@ void questionThree(){
 
   for(row = 0.25; row < 0.95; row += 0.1){
     lambda = (linkRate * row) / packetSize;
-    alpha = lambda;
+    alpha = 2*lambda;
     printf("\n,%f,%f,", row, simulationLength);
     simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1);
     printf("\n,%f,%f,",row,(simulationLength*2));
@@ -196,7 +197,7 @@ void questionFour(){
   double row = 1.2;
 
   lambda = (linkRate * row) / packetSize;
-  alpha = lambda;
+  alpha = 2*lambda;
   printf("\n,%f,%f,", row, simulationLength);
   simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1);
   printf("\n,%f,%f,",row,(simulationLength*2));
@@ -221,7 +222,7 @@ void questionSixA(){
   for(int i = 0; i < 4; i++){
     for(row = 0.5; row < 1.5; row += 0.1){
       lambda = (linkRate * row) / packetSize;
-      alpha = lambda;
+      alpha = 2*lambda;
       printf("\n,%f,%f,", row, simulationLength);
       simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
       printf("\n,%f,%f,",row,(simulationLength*2));
@@ -246,7 +247,7 @@ void questionSixB(){
   for(int i = 0; i < 3; i++){
     for(row = 0.4; row <= 2; row += 0.1){
       lambda = (linkRate * row) / packetSize;
-      alpha = lambda;
+      alpha = 2*lambda;
       printf("\n,%f,%f,", row, simulationLength);
       simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
       printf("\n,%f,%f,",row,(simulationLength*2));
@@ -257,7 +258,7 @@ void questionSixB(){
   for(int i = 0; i < 3; i++){
     for(row = 2.1; row <= 2.5; row += 0.2){
       lambda = (linkRate * row) / packetSize;
-      alpha = lambda;
+      alpha = 2*lambda;
       printf("\n,%f,%f,", row, simulationLength);
       simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
       printf("\n,%f,%f,",row,(simulationLength*2));
@@ -267,7 +268,7 @@ void questionSixB(){
   for(int i = 0; i < 3; i++){
     for(row = 2.7; row < 10; row += 0.4){
       lambda = (linkRate * row) / packetSize;
-      alpha = lambda;
+      alpha = lambda*2;
       printf("\n,%f,%f,", row, simulationLength);
       simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
       printf("\n,%f,%f,",row,(simulationLength*2));
@@ -289,11 +290,11 @@ int main(){
 
   printf("\nQuestion 3,,,,,,,,,");
   questionThree();
-//  printf("\nQuestion 4,,,,,,,,,");
-//  questionFour();
-//  printf("\nQuestion 6A,,,,,,,,,");
-//  questionSixA();
-//  printf("\nQuestion 6B,,,,,,,,,");
-//  questionSixB();
+  printf("\nQuestion 4,,,,,,,,,");
+  questionFour();
+  printf("\nQuestion 6A,,,,,,,,,");
+  questionSixA();
+  printf("\nQuestion 6B,,,,,,,,,");
+  questionSixB();
 
 }
