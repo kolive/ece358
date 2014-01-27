@@ -96,7 +96,7 @@ void simulate(double T, double alpha, double lambda, double L, double C, int K){
           Event * dep;
           if(d.size() > 0){
 
-            dep = new Event((d.back()->getArrivalTime() + processingTime), DEPARTURE);
+            dep = new Event((d.at(0)->getArrivalTime() + processingTime), DEPARTURE);
           }else{
             dep = new Event((e->getArrivalTime() + processingTime), DEPARTURE);
           }
@@ -152,13 +152,13 @@ void simulate(double T, double alpha, double lambda, double L, double C, int K){
     mean_sojourn,
     proportion_idle,
     ((double)droppedCount / arrivalCount));
-
-  //printf("Arrival Count: %d, Departure Count: %d, Observer Count: %d \t", arrivalCount, departureCount, observerCount);
-  //printf("E[N] = %G \t", mean_count);
-  //printf("E[T] = %G \t", mean_sojourn);
-  //printf("Pidle = %G \t", proportion_idle);
-  //printf("Ploss = %G \n", ((double)droppedCount / arrivalCount));
-
+/*
+  printf("Arrival Count: %d, Departure Count: %d, Observer Count: %d \t", arrivalCount, departureCount, observerCount);
+  printf("E[N] = %G \t", mean_count);
+  printf("E[T] = %G \t", mean_sojourn);
+  printf("Pidle = %G \t", proportion_idle);
+  printf("Ploss = %G \n", ((double)droppedCount / arrivalCount));
+*/
 }
 
 void questionThree(){
@@ -289,11 +289,11 @@ int main(){
 
   printf("\nQuestion 3,,,,,,,,,");
   questionThree();
-  printf("\nQuestion 4,,,,,,,,,");
-  questionFour();
-  printf("\nQuestion 6A,,,,,,,,,");
-  questionSixA();
-  printf("\nQuestion 6B,,,,,,,,,");
-  questionSixB();
+//  printf("\nQuestion 4,,,,,,,,,");
+//  questionFour();
+//  printf("\nQuestion 6A,,,,,,,,,");
+//  questionSixA();
+//  printf("\nQuestion 6B,,,,,,,,,");
+//  questionSixB();
 
 }
