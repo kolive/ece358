@@ -1,6 +1,6 @@
 CC = g++ 
-CFLAGS = -Wall -g
-LDFLAGS = -lm
+CFLAGS = -Wall -g 
+LDFLAGS = -lm -lpthread
 
 all: Lab1.exe
 

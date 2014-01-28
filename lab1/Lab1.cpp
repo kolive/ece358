@@ -16,9 +16,8 @@ typedef std::vector<Event*> event_set;
 typedef std::queue<Event*> dep_set;
 typedef std::vector<int> count_sample;
 typedef std::vector<double> sojourn_times;
-typedef std::map<int, bool> droppedStatus;
 
-void simulate(double T, double alpha, double lambda, double L, double C, double K){
+char * simulate(double T, double alpha, double lambda, double L, double C, double K){
   event_set ao;
   dep_set d;
   count_sample pc;
@@ -26,17 +25,17 @@ void simulate(double T, double alpha, double lambda, double L, double C, double 
 
   ExponentialVariable * interarrival = new ExponentialVariable(10, (lambda));
   if(!interarrival->generateExponential(20000)){
-    return; //error
+    return new char[1]; //error
   }
 
   ExponentialVariable * interobserver = new ExponentialVariable(10, (alpha));
   if(!interobserver->generateExponential(20000)){
-    return; //error
+    return new char[1]; //error
   }
 
   ExponentialVariable * sizes = new ExponentialVariable(10, 1/L);
   if(!sizes->generateExponential(20000)){
-    return; //error
+    return new char[1]; //error
   }
   //generate observers
   double currentTime = 0;
@@ -144,15 +143,18 @@ void simulate(double T, double alpha, double lambda, double L, double C, double 
   delete interobserver;
   delete sizes;
 
-  printf("%f,%d,%d,%d,%f,%f,%f,%f",
+  char * rtstr = new char[400];
+  sprintf(rtstr, "%f,%d,%d,%d,%d,%f,%f,%f,%f",
     K,
     arrivalCount,
+    droppedCount,
     departureCount,
     observerCount,
     mean_count,
     mean_sojourn,
     proportion_idle,
-    ((double)droppedCount / arrivalCount));
+    ((double)droppedCount / (arrivalCount+droppedCount)));
+  return rtstr;
 /*
   printf("Arrival Count: %d, Departure Count: %d, Observer Count: %d \t", arrivalCount, departureCount, observerCount);
   printf("E[N] = %G \t", mean_count);
@@ -175,10 +177,10 @@ void questionThree(){
   for(row = 0.25; row < 0.95; row += 0.1){
     lambda = (linkRate * row) / packetSize;
     alpha = 2*lambda;
-    printf("\n,%f,%f,", row, simulationLength);
-    simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1);
-    printf("\n,%f,%f,",row,(simulationLength*2));
-    simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, -1);
+    printf("\n,%f,%f,%s", row, simulationLength,
+      simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1));
+    printf("\n,%f,%f,%s",row,(simulationLength*2),
+      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, -1));
   }
 
 
@@ -198,10 +200,10 @@ void questionFour(){
 
   lambda = (linkRate * row) / packetSize;
   alpha = 2*lambda;
-  printf("\n,%f,%f,", row, simulationLength);
-  simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1);
-  printf("\n,%f,%f,",row,(simulationLength*2));
-  simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, -1);
+  printf("\n,%f,%f,%s", row, simulationLength,
+    simulate(simulationLength, alpha, lambda, packetSize, linkRate, -1));
+  printf("\n,%f,%f,%s",row,(simulationLength*2),
+    simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, -1));
 
 
  // printf("\n SIMULATION COMPLETE. \n");
@@ -223,10 +225,10 @@ void questionSixA(){
     for(row = 0.5; row < 1.5; row += 0.1){
       lambda = (linkRate * row) / packetSize;
       alpha = 2*lambda;
-      printf("\n,%f,%f,", row, simulationLength);
-      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
-      printf("\n,%f,%f,",row,(simulationLength*2));
-      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]);
+      printf("\n,%f,%f,%s", row, simulationLength,
+        simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]));
+      printf("\n,%f,%f,%s",row,(simulationLength*2),
+        simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]));
    }
  }
 
@@ -234,7 +236,7 @@ void questionSixA(){
 
 }
 
-void questionSixB(){
+void questionSixB(int queueSize){
 //  printf(" \n BEGINNING SIMULATION OF M/M/1 QUEUE \n ");
 
   double simulationLength = 20000;
@@ -244,37 +246,34 @@ void questionSixB(){
   double linkRate = 1000000;
   double row = 0.0;
   double k[] = {5, 10, 40};
-  for(int i = 0; i < 3; i++){
-    for(row = 0.4; row <= 2; row += 0.1){
-      lambda = (linkRate * row) / packetSize;
-      alpha = 2*lambda;
-      printf("\n,%f,%f,", row, simulationLength);
-      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
-      printf("\n,%f,%f,",row,(simulationLength*2));
-      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]);
-    }
+  int i = queueSize;
+  for(row = 0.4; row <= 2; row += 0.1){
+    lambda = (linkRate * row) / packetSize;
+    alpha = 2*lambda;
+    printf("\n,%f,%f,%s", row, simulationLength,
+      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]));
+    printf("\n,%f,%f,%s",row,(simulationLength*2),
+      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]));
   }
 
-  for(int i = 0; i < 3; i++){
-    for(row = 2.1; row <= 2.5; row += 0.2){
-      lambda = (linkRate * row) / packetSize;
-      alpha = 2*lambda;
-      printf("\n,%f,%f,", row, simulationLength);
-      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
-      printf("\n,%f,%f,",row,(simulationLength*2));
-      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]);
-    }
+  for(row = 2.1; row <= 2.5; row += 0.2){
+    lambda = (linkRate * row) / packetSize;
+    alpha = 2*lambda;
+    printf("\n,%f,%f,%s", row, simulationLength,
+      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]));
+    printf("\n,%f,%f,%s",row,(simulationLength*2),
+      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]));
   }
-  for(int i = 0; i < 3; i++){
-    for(row = 2.7; row < 10; row += 0.4){
-      lambda = (linkRate * row) / packetSize;
-      alpha = lambda*2;
-      printf("\n,%f,%f,", row, simulationLength);
-      simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]);
-      printf("\n,%f,%f,",row,(simulationLength*2));
-      simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]);
-    }
+  
+  for(row = 2.7; row < 10; row += 0.4){
+    lambda = (linkRate * row) / packetSize;
+    alpha = lambda*2;
+    printf("\n,%f,%f,%s", row, simulationLength,
+    simulate(simulationLength, alpha, lambda, packetSize, linkRate, k[i]));
+    printf("\n,%f,%f,%s",row,(simulationLength*2),
+    simulate((2*simulationLength), alpha, lambda, packetSize, linkRate, k[i]));
   }
+  
  // printf("\n SIMULATION COMPLETE. \n");
 
 }
@@ -286,15 +285,16 @@ int main(){
   printf("  January 14th 2014 \n");
   printf(" ************************************************ \n");
 
-  printf("\nQuestion #, Row, Simulation Time (s), K, ArrivalCount, DepartureCount, ObserverCount, E[N], E[T], Pidle, Ploss");
+  printf("\nQuestion #, Row, Simulation Time (s), K, Accepted Arrival Count, DroppedCount, DepartureCount, ObserverCount, E[N], E[T], Pidle, Ploss");
 
-  printf("\nQuestion 3,,,,,,,,,");
+  printf("\nQuestion 3,,,,,,,,,,");
   questionThree();
-  printf("\nQuestion 4,,,,,,,,,");
+  printf("\nQuestion 4,,,,,,,,,,");
   questionFour();
-  printf("\nQuestion 6A,,,,,,,,,");
+  printf("\nQuestion 6A,,,,,,,,,,");
   questionSixA();
-  printf("\nQuestion 6B,,,,,,,,,");
-  questionSixB();
-
+  printf("\nQuestion 6B,,,,,,,,,,");
+  questionSixB(0);
+  questionSixB(1);
+  questionSixB(2);
 }
