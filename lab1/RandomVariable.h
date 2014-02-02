@@ -3,7 +3,6 @@
 
 class RandomVariable{
   public:
-    //amount in % that variance and mean are allowed to drift
     int errorFactor;
     int size;
     double* values;
@@ -11,6 +10,8 @@ class RandomVariable{
     int getErrorFactor();
     bool verifyMean(double);
     bool verifyVariance(double);
+    double getMean();
+    double getVariance();
     bool generateUniform(int);
     
 

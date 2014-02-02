@@ -1,12 +1,9 @@
 #include "RandomVariable.h"
-#include "Logger.h"
-#include <stdlib.h>     /* srand, rand */
-#include <stdio.h>
+#include <stdlib.h>
 #include <cmath>
 
-#define LOGGING 0
-
 RandomVariable::RandomVariable(int errorFactor){
+  this->values = new double[1];
   this->size = 0;
   this->errorFactor = errorFactor;
 
@@ -16,7 +13,9 @@ int RandomVariable::getErrorFactor(){
   return this->errorFactor;
 }
 
+
 bool RandomVariable::generateUniform(int size){
+  delete[] this->values;
   this->values = new double[size];
   this->size = size;
   for(int i = 0; i < size; i++){
@@ -25,6 +24,16 @@ bool RandomVariable::generateUniform(int size){
 
   return (this->verifyMean(0.5) && this->verifyVariance(0.08333333333));
 
+}
+
+double RandomVariable::getMean(){
+  double mean = 0;
+
+  for(int i = 0; i < this->size; i++){
+    mean += this->values[i];
+  }
+  mean = mean / this->size;
+  return mean;
 }
 
 bool RandomVariable::verifyMean(double expectedMean){
@@ -40,18 +49,31 @@ bool RandomVariable::verifyMean(double expectedMean){
   error = fabs(((mean - expectedMean)/mean) * 100);
 
   if(error < errorFactor){
-
-    Logger::log(LOGGING, (char *)"LOG: Calculated mean within %d percent of expected mean of %G \n", this->errorFactor, expectedMean);
-    Logger::log(LOGGING, (char *) "LOG: Actual error: %G\% \n", error);
-
     return true;
   }else{
-
-    Logger::log(LOGGING,(char *) "LOG: Calculated mean of %G did not match expected mean of %G. ", mean, expectedMean);
-    Logger::log(LOGGING,(char *)"LOG: Actual error: %G\%\n", error);
-
     return false;
   }
+
+}
+
+double RandomVariable::getVariance(){
+  double mean = 0;
+  double variance = 0;
+  double tmp = 0;
+
+  for(int i = 0; i < this->size; i++){
+    mean += this->values[i];
+  }
+  mean = mean / this->size;
+
+  for(int i = 0; i < this->size; i++){
+    tmp = this->values[i] - mean;
+    variance += (tmp*tmp);
+  }
+
+  variance = variance / this->size;
+
+  return variance;
 
 }
 
@@ -75,15 +97,8 @@ bool RandomVariable::verifyVariance(double expectedVariance){
   error = fabs(((variance - expectedVariance)/variance) * 100);
 
   if(error < errorFactor){
-
-   Logger::log(LOGGING, (char *) "LOG: Calculated variance within %d percent of expected variance of %G \n", this->errorFactor, expectedVariance);
-   Logger::log(LOGGING, (char*) "LOG: Actual error: %G\% \n", error);
    return true;
   }else{
-
-   Logger::log(LOGGING, (char *) "LOG: Calculated variance %G not within error range of expected variance of %G \n", variance, expectedVariance);
-   Logger::log(LOGGING, (char*) "LOG: Actual error: %G\% \n", error);
-
    return false;
   }
 }
