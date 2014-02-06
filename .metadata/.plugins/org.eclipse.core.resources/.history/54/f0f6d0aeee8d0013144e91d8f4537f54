@@ -1,0 +1,21 @@
+package lab2.pdu;
+
+public class Packet {
+	
+	private int sn; 
+	private Packet payload;
+	
+	public Packet(int sn, Packet payload){
+		this.sn = sn;
+		this.payload = payload;
+	}
+	
+	public int getSequenceNumber(){
+		return sn;
+	}
+	
+	public Packet getPayload(){
+		return payload;
+	}
+
+}

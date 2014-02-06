@@ -1,0 +1,22 @@
+package lab2.event;
+
+public class Event {
+
+	private EventType type;
+	private double time;
+	
+	public Event(EventType type, double time){
+		this.type = type;
+		this.time = time;
+	}
+	
+	public double getTime(){
+		return time;
+	}
+	
+	public EventType getType(){
+		return type;
+	}
+	
+	
+}
