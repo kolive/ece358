@@ -1,0 +1,46 @@
+package lab2.simulate;
+import java.util.Random;
+public class Channel {
+	
+	static double lastTime; //the time after processing through a channel
+	static boolean packetDropped; //whether or not the packet was dropped
+	static boolean packetError; //whether or not the packet was in error
+	
+	
+	public static boolean isPacketDropped() {
+		// TODO Auto-generated method stub
+		return packetDropped;
+	}
+
+	public static boolean isPacketError() {
+		// TODO Auto-generated method stub
+		return packetError;
+	}
+
+	public static void simulate(double ber, double propDelay, double currentTime, double l) {
+		// TODO Auto-generated method stub
+		Random r = new Random();
+		lastTime = propDelay + currentTime;
+		int errorCount = 0;
+		for(int i = 0; i < l; i++){
+			if (r.nextInt((int) (1/ber)) == 0) errorCount ++; //a chance of BER of error
+		}
+		
+		if(errorCount >= 5){
+			packetDropped = true;
+			packetError = true;
+		}else if(errorCount < 1){
+			packetError = false;
+			packetDropped = false;
+		}else{
+			packetError = true;
+			packetDropped = false;
+		}
+	}
+
+	public static double getLastTime() {
+		// TODO Auto-generated method stub
+		return lastTime;
+	}
+
+}

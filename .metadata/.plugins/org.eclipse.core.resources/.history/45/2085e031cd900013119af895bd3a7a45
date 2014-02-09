@@ -1,0 +1,16 @@
+package simulate;
+
+public class Channel {
+
+	
+	public static boolean isPacketDropped() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public static boolean isPacketError() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

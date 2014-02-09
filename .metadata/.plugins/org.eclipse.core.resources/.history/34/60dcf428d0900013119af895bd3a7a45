@@ -1,0 +1,33 @@
+package lab2.event;
+
+import java.util.Queue;
+
+public class EventScheduler {
+
+	Queue<Event> eventSet; 
+	Queue<Integer> timeoutSet; //a list of all live timeouts
+	
+	
+	public void queue(Event event) {
+		if(event == null)
+			return;
+		
+		eventSet.add(event);
+		if(event.getType() == EventType.TO){
+			timeoutSet.add(eventSet.size()-1);
+		}
+		
+	}
+
+	public Event dequeue() {
+		timeoutSet.pop
+		return null;
+	}
+
+	public void purgeTimeouts() {
+		Integer i = null;
+		while((i = timeoutSet.poll()) != null){
+		}
+	}
+
+}

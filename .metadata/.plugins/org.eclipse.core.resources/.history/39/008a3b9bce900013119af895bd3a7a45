@@ -1,0 +1,29 @@
+package simulate;
+
+public class Channel {
+	
+	static double lastTime = 0; //the time after processing through a channel
+	static boolean packetDropped = false; //whether or not the packet was dropped
+	static boolean packetError = false; //whether or not the packet was in error
+	
+	public static boolean isPacketDropped() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public static boolean isPacketError() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public static void simulate(double ber, double propDelay, double currentTime, double l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public static double getLastTime() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

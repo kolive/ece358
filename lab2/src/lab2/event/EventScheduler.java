@@ -1,10 +1,53 @@
 package lab2.event;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class EventScheduler {
 
+	Queue<Event> eventSet; 
+	Queue<Event> timeoutSet; //a list of all live timeouts
+	
+	
+	public EventScheduler(){
+		eventSet = new LinkedList<Event>();
+		timeoutSet = new LinkedList<Event>();
+	}
+	
 	public void queue(Event event) {
-		// TODO Auto-generated method stub
+		if(event == null)
+			return;
+
+		if(event.getType() == EventType.TO){
+			timeoutSet.add(event);
+		}else{	
+			eventSet.add(event);
+		}
 		
+	}
+
+	public Event dequeue() {
+		if(timeoutSet.peek() == null && eventSet.peek() == null){
+			return null;
+		}else if(timeoutSet.peek() == null && eventSet.peek() != null){
+			return eventSet.poll();
+		}else if(eventSet.peek() == null && timeoutSet.peek() != null){
+			return timeoutSet.poll();
+		}else if(eventSet.peek().getTime() < timeoutSet.peek().getTime()){
+			return eventSet.poll();
+		}else if(eventSet.peek().getTime() > timeoutSet.peek().getTime()){
+			return timeoutSet.poll();
+		}
+		
+		return null;
+	}
+
+	public void purgeTimeouts() {
+		timeoutSet = new LinkedList<Event>();
+	}
+	
+	public int size(){
+		return timeoutSet.size() + eventSet.size();
 	}
 
 }

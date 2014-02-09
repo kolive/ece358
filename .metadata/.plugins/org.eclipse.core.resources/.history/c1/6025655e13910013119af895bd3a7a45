@@ -1,0 +1,38 @@
+package lab2;
+
+import lab2.simulate.ABPSender;
+
+public class Lab2 {
+
+	public static void main(String[] args) {
+		ABPSender abp = new ABPSender(12/1000, 1500, 54, 655360, 5.0/1000,0.0001);
+		System.out.println(abp.simulate(50000) + "s for 10000 arrivals");
+	}
+
+	public static void questionOne(){
+		double tau = 5/1000; //tau in s
+		double C = 655360; //c in b/s
+		double h = 54;
+		double p = 1500;
+		double[] timeout = {2.5 * tau, 5 * tau, 10 * tau, 12.5 * tau };
+		double[] ber = {0, 0.00001, 0.0001};
+		
+		ABPSender abp;
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeout[0], p, h, C, tau, ber[n]);
+				System.out.println(abp.simulate(50000) + "s for 50000 arrivals");
+			}
+		}
+		
+		tau = 250/1000;
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeout[0], p, h, C, tau, ber[n]);
+				System.out.println(abp.simulate(50000) + "s for 50000 arrivals");
+			}
+		}
+	}
+
+}
+

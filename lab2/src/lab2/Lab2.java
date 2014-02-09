@@ -1,0 +1,77 @@
+package lab2;
+
+import lab2.simulate.ABPSender;
+
+public class Lab2 {
+
+	public static void main(String[] args) {
+		questionOne();
+		//questionTwo();
+	}
+
+	public static void questionOne(){
+		double tau = 5.0/1000; //tau in s
+		double C = 655360.0; //c in b/s
+		double h = 54.0;
+		double p = 1500.0;
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), (10 * tau), (12.5 * tau) };
+		double[] ber = {0, 0.00001, 0.0001};
+		
+		ABPSender abp;
+		System.out.println("TAU = " + tau + "s");
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				System.out.print("With timeout:" + timeoutOne[i] + " and ber: " + ber[n] + "\n\t " + 12500/abp.simulate(12500,false) + "p/s for 12500 arrivals \n\t ");
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				System.out.println(25000/abp.simulate(25000, false) + "p/s for 25000 arrivals");
+			}
+		}
+		
+		tau = 250.0/1000;
+		double[] timeoutTwo = {2.5 * tau, 5 * tau, 10 * tau, 12.5 * tau };
+		System.out.println("TAU = " + tau + "s");
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau, ber[n]);
+				System.out.print("With timeout:" + timeoutTwo[i] + " and ber: " + ber[n] + "\n\t " + 12500/abp.simulate(12500,false) + "p/s for 12500 arrivals \n\t ");
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau, ber[n]);
+				System.out.println(25000/abp.simulate(25000,false) + "p/s for 25000 arrivals");
+			}
+		}
+	}
+	
+	public static void questionTwo(){
+		double tau = 5.0/1000; //tau in s
+		double C = 655360.0; //c in b/s
+		double h = 54.0;
+		double p = 1500.0;
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), (10 * tau), (12.5 * tau) };
+		double[] ber = {0, 0.00001, 0.0001};
+		
+		ABPSender abp;
+		System.out.println("TAU = " + tau + "s");
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				System.out.print("With timeout:" + timeoutOne[i] + " and ber: " + ber[n] + "\n\t " + 12500/abp.simulate(12500,true) + "p/s for 12500 arrivals \n\t ");
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				System.out.println(25000/abp.simulate(25000, true) + "p/s for 25000 arrivals");
+			}
+		}
+		
+		tau = 250.0/1000;
+		double[] timeoutTwo = {2.5 * tau, 5 * tau, 10 * tau, 12.5 * tau };
+		System.out.println("TAU = " + tau + "s");
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau, ber[n]);
+				System.out.print("With timeout:" + timeoutTwo[i] + " and ber: " + ber[n] + "\n\t " + 12500/abp.simulate(12500,true) + "p/s for 12500 arrivals \n\t ");
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau, ber[n]);
+				System.out.println(25000/abp.simulate(25000,true) + "p/s for 25000 arrivals");
+			}
+		}
+	}
+
+}
+

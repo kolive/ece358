@@ -1,0 +1,12 @@
+package lab2;
+
+import lab2.simulate.ABPSender;
+
+public class Lab2 {
+
+	public static void main(String[] args) {
+		ABPSender abp = new ABPSender(12/1000, 1500, 54, 655360, 5.0/1000,0);
+		System.out.println(abp.simulate(10000) + "s for 10000 arrivals");
+	}
+
+}
