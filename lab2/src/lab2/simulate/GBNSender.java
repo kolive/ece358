@@ -107,6 +107,8 @@ public class GBNSender {
 			}else{
 				es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
 				//we can also now send a bunch more packets to fill the buffer
+				//not sure if this should be "scheduled sends" or if that's equivalent to sending it now
+				//they'll get pre-empted if it's something happens before the send, wont they?
 				while(buffer.nextNull != -1){
 					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime)));
 					currentTime += processPTime;
