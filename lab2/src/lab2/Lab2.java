@@ -1,12 +1,15 @@
 package lab2;
 
 import lab2.simulate.ABPSender;
+import lab2.simulate.GBNSender;
 
 public class Lab2 {
 
 	public static void main(String[] args) {
 		questionOne();
 		//questionTwo();
+		
+		//questionThree();
 	}
 
 	public static void questionOne(){
@@ -71,6 +74,28 @@ public class Lab2 {
 				System.out.println(25000/abp.simulate(25000,true) + "p/s for 25000 arrivals");
 			}
 		}
+	}
+	
+	public static void questionThree(){
+		double tau = 5.0/1000; //tau in s
+		double C = 655360.0; //c in b/s
+		double h = 54.0;
+		double p = 1500.0;
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), (10 * tau), (12.5 * tau) };
+		double[] ber = {0, 0.00001, 0.0001};
+		
+		GBNSender gbn;
+		System.out.println("TAU = " + tau + "s");
+		for(int n = 0; n < 3; n++){
+			for(int i = 0; i < 4; i++){
+				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 5);
+				System.out.print("With timeout:" + timeoutOne[i] + " and ber: " + ber[n] + "\n\t " + 50000/gbn.simulate(50000,false) + "p/s for 50000 arrivals \n\t ");
+				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 5);
+				System.out.println(50000/gbn.simulate(100000, false) + "p/s for 100000 arrivals");
+			}
+		}
+		
+		
 	}
 
 }

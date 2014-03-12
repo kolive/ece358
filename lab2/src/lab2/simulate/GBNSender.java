@@ -1,12 +1,13 @@
 package lab2.simulate;
 import lab2.event.*;
+import lab2.simulate.Buffer;
 
 public class GBNSender {
 	
 	private EventScheduler es;
 	
-	private int sn;
-	private int nextSN;
+	private int sender_sn;
+	private int reciever_rn;
 	private double timeoutValue;
 	private double currentTime;
 	
@@ -21,11 +22,12 @@ public class GBNSender {
 	private double processHTime;
 
 	private int n;
+	private Buffer buffer;
 	
 	public GBNSender(
 			double timeout, double ps, double hs, double lr, double pd, double ber, int n){
-		sn = 0;
-		nextSN = 1;
+		sender_sn = 0;
+		reciever_rn = 1;
 		timeoutValue = timeout;
 		currentTime = 0;
 		packetSize = ps;
@@ -36,10 +38,12 @@ public class GBNSender {
 		es = new EventScheduler();
 		this.ber = ber;
 		this.n = n;
-		
+		buffer = new Buffer(n, sender_sn);
 	}
 	
 	public Event send(int sn){
+		//TODO: Make sure I'm calculating process and delay properly for both sides
+		
 		//first stretch of the channel begins after processing the FRAME (processTime)
 		Channel.simulate(ber, propDelay, currentTime + processPTime, packetSize + headerSize);
 		boolean forwardDropped = Channel.isPacketDropped();
@@ -54,7 +58,8 @@ public class GBNSender {
 			return null;
 		}
 		
-		return new Event(EventType.ACK, Channel.getLastTime(), nextSN, forwardError || reverseError );
+		//generate ack event
+		return new Event(EventType.ACK, Channel.getLastTime(), reciever_rn, forwardError || reverseError );
 	}
 	
 	public double simulate(int successfulArrivals, boolean nackEnabled){
@@ -66,34 +71,46 @@ public class GBNSender {
 			e = es.dequeue();
 			if(e != null){
 				if(e.getType() == EventType.TO){
+					//process a timeout event
 					currentTime = e.getTime(); //is there a time to process to?
+					
+					//timeout occurs, resend all packets in buffer
 					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-					es.queue(send(sn));
+					for(int i = 0; i < n; i++){
+						int tmpsn = buffer.getN(i).sn;
+						if(tmpsn != -1) es.queue(send(tmpsn)); //if the buffer spot isn't empty resend that packet
+					}					
+					
 				}else if(!e.isError()){
+					//process an error free ack 
 					currentTime = e.getTime() + processHTime; //time to process the return header
-					if(e.getSN() == nextSN){
-						count++;
+					//if the ack is good, then shift the buffer until we get to the element with the same sn as the ack
+					if(e.getType() == EventType.ACK){
+						do{
+							count++;
+							buffer.shift();
+						} while (buffer.getFront().sn != -1 && buffer.getFront().sn != e.getSN());
+						
+						//we can also now send a bunch more packets to fill the buffer
+						while(buffer.nextNull != -1){
+							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime)));
+							currentTime += processPTime;
+						}
+						
+						//we also have to reset the timeout based on when the next unacked packet
 						es.purgeTimeouts();
-						sn = (sn+1)%2;
-						nextSN = (nextSN+1)%2;
-						es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-						es.queue(send(sn));
-					}else if(nackEnabled){
-						//should i be purging timeouts here? I think so
-						es.purgeTimeouts();
-						es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-						es.queue(send(sn));
+						es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue+processPTime));
 					}
-				}else if(nackEnabled && e.isError()){
+				}else if(e.isError()){
 					currentTime = e.getTime(); //is there a time to process to?
-					//should i be purging timeouts here? I think so
-					es.purgeTimeouts();
-					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-					es.queue(send(sn));
 				}
 			}else{
-				es.queue(new Event(EventType.TO, currentTime + processPTime+timeoutValue));	
-				es.queue(send(sn));
+				es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
+				//we can also now send a bunch more packets to fill the buffer
+				while(buffer.nextNull != -1){
+					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime)));
+					currentTime += processPTime;
+				}
 			}
 			
 		}

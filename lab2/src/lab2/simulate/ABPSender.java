@@ -37,6 +37,8 @@ public class ABPSender {
 	}
 	
 	public Event send(int sn){
+		//TODO: Make sure I'm calculating process and delay properly for both sides
+		
 		//first stretch of the channel begins after processing the FRAME (processTime)
 		Channel.simulate(ber, propDelay, currentTime + processPTime, packetSize + headerSize);
 		boolean forwardDropped = Channel.isPacketDropped();
@@ -84,6 +86,7 @@ public class ABPSender {
 				}else if(nackEnabled && e.isError()){
 					currentTime = e.getTime(); //is there a time to process to?
 					//should i be purging timeouts here? I think so
+					// Why am I purging timeouts and resending when nackEnabled = true and the event has an error? Shouldn't this happen if the event is a NACK?
 					es.purgeTimeouts();
 					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
 					es.queue(send(sn));
