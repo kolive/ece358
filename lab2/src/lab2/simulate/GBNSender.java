@@ -92,9 +92,11 @@ public class GBNSender {
 						} while (buffer.getFront().sn != -1 && buffer.getFront().sn != e.getSN());
 						
 						//we can also now send a bunch more packets to fill the buffer
+						int x = 0;
 						while(buffer.nextNull != -1){
-							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime)));
-							currentTime += processPTime;
+							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime)));
+							x++;
+							// TODO: you aren't updating current time properly. when you send a bunch of packets it fucks up the simulation
 						}
 						
 						//we also have to reset the timeout based on when the next unacked packet
@@ -109,9 +111,13 @@ public class GBNSender {
 				//we can also now send a bunch more packets to fill the buffer
 				//not sure if this should be "scheduled sends" or if that's equivalent to sending it now
 				//they'll get pre-empted if it's something happens before the send, wont they?
+					//no probably not. need to add an event for "scheduling" a send. if something happens before that
+					//all "scheduled" events probably need to be thrown out
+				int x = 0;
 				while(buffer.nextNull != -1){
-					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime)));
-					currentTime += processPTime;
+					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime)));
+					x++;
+					// TODO: you aren't updating current time properly. when you send a bunch of packets it fucks up the simulation
 				}
 			}
 			
