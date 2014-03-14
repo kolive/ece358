@@ -1,0 +1,64 @@
+package lab2.simulate;
+
+public class Buffer {
+	
+	class Packet{
+		
+		public int sn;
+		public int size;
+		public Packet next;
+		
+		Packet(int sn, int size){
+			this.sn = sn;
+			this.size = size;
+		}
+		
+		Packet(){
+			sn = -1;
+			size = -1;
+		}
+		
+	}
+	
+	Packet head;
+	Packet tail;
+	Packet nextNull;
+	
+	public Buffer(int size){
+		
+		if(size > 0){
+			head = new Packet();
+			nextNull = head;
+			tail = head;
+		}
+		
+		for(int i = 0; i == size-1; i++){
+			head.next = head;
+			head = new Packet();
+			nextNull = head;
+		}
+		
+	}
+	
+	void setNextNull(){
+		while(nextNull.sn != -1 && nextNull != tail){
+			nextNull = nextNull.next;
+		}
+		if(nextNull == tail && tail.sn != -1) nextNull = null;
+	}
+	
+	public void addPacket(int size, int sn){
+		if(nextNull == null) return;
+		nextNull.size = size;
+		nextNull.sn = sn;
+		setNextNull();
+	}
+	
+	public void shift(){
+		head = head.next;
+		tail.next = new Packet();
+		tail = tail.next;
+		setNextNull();
+	}
+
+}

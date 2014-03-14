@@ -32,6 +32,7 @@ public class Buffer {
 	int head;
 	int nextSN;
 	int nextNull;
+	double maxtime;
 	
 	public Buffer(int size, int startSN){
 		
@@ -67,19 +68,22 @@ public class Buffer {
 		return buffer[(head + n)%buffer.length];
 	}
 	
-	public int addPacket(double size, double time){
+	public int addPacket(double size, double time, int sn){
 		if(nextNull == -1) return -1;
-		int oldSN = nextSN;
-		buffer[nextNull] = new Packet(nextSN, size, time);
-		nextSN = (nextSN+1)%(buffer.length+1);
+		buffer[nextNull] = new Packet(sn, size, time);
+		maxtime = time;
 		setNextNull();
-		return oldSN;
+		return sn;
 	}
 	
 	public void shift(){
 		buffer[head] = new Packet();
 		head = (head + 1)%buffer.length;
 		setNextNull();
+	}
+
+	public double getMaxTime() {
+		return maxtime;
 	}
 	
 

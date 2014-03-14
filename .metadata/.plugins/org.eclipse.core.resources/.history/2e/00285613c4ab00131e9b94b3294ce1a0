@@ -1,0 +1,40 @@
+package lab2.simulate;
+
+public class GBNSimulator implements Runnable {
+	private Thread t;
+	String name;
+	private GBNSender s;
+	private String result;
+	private int count;
+	private double p;
+	public GBNSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int n, int count){
+		s = new GBNSender(timeout, ps, hs, lr, pd, ber, n);
+		this.count = count;
+		this.p = ps;
+		name = "GBN_"+ber+"_"+count;
+	}
+	
+	
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		double simres = 8*count*p/s.simulate(count, false);
+		result = "," + simres;
+	}
+	
+	public void start(){
+		if(t == null){
+			t = new Thread(this, name);
+		}
+	}
+	
+	public boolean isComplete(){
+		if(t == null) return false;
+		return t.isAlive();
+	}
+	
+	public String getResult(){
+		return result;
+	}
+
+}

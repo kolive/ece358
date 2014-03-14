@@ -59,6 +59,7 @@ public class ABPSender {
 	public double simulate(int successfulArrivals, boolean nackEnabled){
 		currentTime = 0;
 		Event e;
+		EventScheduler es = new EventScheduler();
 		int count = 0;
 		while( count < successfulArrivals ){
 			//process next event
@@ -75,6 +76,11 @@ public class ABPSender {
 						es.purgeTimeouts();
 						sn = (sn+1)%2;
 						nextSN = (nextSN+1)%2;
+					/*	System.out.println("abpReceived packet with SN: " + e.getSN() + " next SN to send: " + nextSN);
+						System.out.println("abpcurrent count: " + count);
+						System.out.println("abpcurrent time: " + currentTime);
+						System.out.println("Sending: " + sn);
+						System.out.println("events: " + ecount);*/
 						es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
 						es.queue(send(sn));
 					}else if(nackEnabled){

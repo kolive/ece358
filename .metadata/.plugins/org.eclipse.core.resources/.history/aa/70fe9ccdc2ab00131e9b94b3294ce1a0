@@ -1,0 +1,21 @@
+package lab2.simulate;
+
+public class GBNSimulator implements Runnable {
+	private Thread t;
+	private GBNSender s;
+	private String result;
+	private int count;
+	GBNSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int n, int count){
+		s = new GBNSender(timeout, ps, hs, lr, pd, ber, n);
+		this.count = count;
+	}
+	
+	
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		double simres = s.simulate(count, false);
+		result = "," + result;
+	}
+
+}

@@ -1,0 +1,11 @@
+package lab2.simulate;
+
+public class Simulator implements Runnable {
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+
+	}
+
+}

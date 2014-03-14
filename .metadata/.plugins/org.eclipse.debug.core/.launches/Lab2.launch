@@ -6,6 +6,8 @@
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
+<stringAttribute key="org.eclipse.debug.ui.ATTR_CAPTURE_IN_FILE" value="C:\code\ece358\lab2\output.txt"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="lab2.Lab2"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="3"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="lab2"/>
 </launchConfiguration>

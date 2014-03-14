@@ -59,6 +59,7 @@ public class GBNSender {
 		}
 		
 		//generate ack event
+		reciever_rn = (sender_sn+1)%(n+1);
 		return new Event(EventType.ACK, Channel.getLastTime(), reciever_rn, forwardError || reverseError );
 	}
 	
@@ -66,59 +67,74 @@ public class GBNSender {
 		currentTime = 0;
 		Event e;
 		int count = 0;
+		sender_sn = 0;
+		reciever_rn = 1;
+		es = new EventScheduler();
+		buffer = new Buffer(n, sender_sn);
 		while( count < successfulArrivals ){
 			//process next event
 			e = es.dequeue();
 			if(e != null){
+				currentTime = e.getTime();
 				if(e.getType() == EventType.TO){
+				//	System.out.println("TIMEOUT " + currentTime);
+				//	System.out.println("EVENT SET SIZE: " + es.size());
 					//process a timeout event
 					currentTime = e.getTime(); //is there a time to process to?
 					
 					//timeout occurs, resend all packets in buffer
+					es.purgeTimeouts();
 					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
+					//System.out.println("4");
 					for(int i = 0; i < n; i++){
 						int tmpsn = buffer.getN(i).sn;
-						if(tmpsn != -1) es.queue(send(tmpsn)); //if the buffer spot isn't empty resend that packet
-					}					
+						if(tmpsn != -1){
+							es.queue(send(tmpsn)); //if the buffer spot isn't empty resend that packet
+							buffer.getN(i).time = currentTime + i*processPTime;
+							//System.out.println("Sending: " + sender_sn);
+						}
+					}
+					//System.out.println("5");
 					
 				}else if(!e.isError()){
 					//process an error free ack 
 					currentTime = e.getTime() + processHTime; //time to process the return header
 					//if the ack is good, then shift the buffer until we get to the element with the same sn as the ack
 					if(e.getType() == EventType.ACK){
+						if(currentTime < buffer.getMaxTime()){
+							//if the current ack time is during a "processing time", delay it until after processing
+							es.queue(new Event(EventType.ACK, buffer.getMaxTime() + processPTime, e.getSN(), e.isError()));
+							continue;
+						}
 						do{
 							count++;
 							buffer.shift();
 						} while (buffer.getFront().sn != -1 && buffer.getFront().sn != e.getSN());
-						
-						//we can also now send a bunch more packets to fill the buffer
+						//System.out.println("count: " + count);
 						int x = 0;
 						while(buffer.nextNull != -1){
-							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime)));
+							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime, sender_sn)));
+							sender_sn = (sender_sn+1)%(n+1);
 							x++;
 							// TODO: you aren't updating current time properly. when you send a bunch of packets it fucks up the simulation
 						}
-						
+						//System.out.println("1");
 						//we also have to reset the timeout based on when the next unacked packet
 						es.purgeTimeouts();
 						es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue+processPTime));
 					}
-				}else if(e.isError()){
-					currentTime = e.getTime(); //is there a time to process to?
 				}
 			}else{
+				es.purgeTimeouts();
 				es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-				//we can also now send a bunch more packets to fill the buffer
-				//not sure if this should be "scheduled sends" or if that's equivalent to sending it now
-				//they'll get pre-empted if it's something happens before the send, wont they?
-					//no probably not. need to add an event for "scheduling" a send. if something happens before that
-					//all "scheduled" events probably need to be thrown out
 				int x = 0;
+				//System.out.println("2");
 				while(buffer.nextNull != -1){
-					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime)));
+					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime, sender_sn)));
+					sender_sn = (sender_sn+1)%(n+1);
 					x++;
-					// TODO: you aren't updating current time properly. when you send a bunch of packets it fucks up the simulation
 				}
+				//System.out.println("3");
 			}
 			
 		}
