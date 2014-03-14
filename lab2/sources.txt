@@ -1,8 +1,0 @@
-./src/lab2/event/Event.java
-./src/lab2/event/EventScheduler.java
-./src/lab2/event/EventType.java
-./src/lab2/Lab2.java
-./src/lab2/simulate/ABPSender.java
-./src/lab2/simulate/Buffer.java
-./src/lab2/simulate/Channel.java
-./src/lab2/simulate/GBNSender.java
