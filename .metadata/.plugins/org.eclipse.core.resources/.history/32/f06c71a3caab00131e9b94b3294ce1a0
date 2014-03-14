@@ -20,7 +20,6 @@ public class GBNSimulator implements Runnable {
 		// TODO Auto-generated method stub
 		double simres = 8*count*p/s.simulate(count, false);
 		result = "," + simres;
-		System.out.println(name + result);
 	}
 	
 	public void start(){

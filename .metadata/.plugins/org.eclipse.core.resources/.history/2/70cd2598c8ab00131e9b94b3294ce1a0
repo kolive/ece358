@@ -1,6 +1,7 @@
 package lab2;
 
 import lab2.simulate.ABPSender;
+import lab2.simulate.ABPSimulator;
 import lab2.simulate.GBNSender;
 import lab2.simulate.GBNSimulator;
 
@@ -82,26 +83,51 @@ public class Lab2 {
 		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		ABPSender abp;
+		ABPSimulator[] sims = new ABPSimulator[3];
+
+		boolean stillExecuting = true;
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
-				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				
+				sims[n] = new ABPSimulator(timeoutOne[i], p, h, C, tau, ber[n], 12500, false);
+				sims[n].start();
+				
+				
+			/*	abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = 8*12500*p/abp.simulate(12500,false);
 				resultstr +=  "," + result;
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = 8*25000*p/abp.simulate(25000, false);
-				
+			*/	
 				
 			}
+			while(stillExecuting){
+				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
+			}
+			stillExecuting = true;
+			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
+			
 			for(int n = 0; n < 3; n++){
+				
+				sims[n] = new ABPSimulator(timeoutTwo[i], p, h, C, tau2, ber[n], 12500, false);
+				sims[n].start();
+				
+				/*
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
 				result = 8*12500*p/abp.simulate(12500,false);
 				resultstr +=  ","+ result;
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
 				result = 8*25000*p/abp.simulate(25000, false);
-				
+				*/
 				
 			}
+			
+			while(stillExecuting){
+				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
+			}
+			stillExecuting = true;
+			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
 			System.out.println(resultstr);
 		}
 		
@@ -164,24 +190,42 @@ public class Lab2 {
 		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		GBNSender gbn;
+		GBNSimulator[] sims = new GBNSimulator[3];
+		boolean stillExecuting = true;
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
+			sims = new GBNSimulator[3];
 			for(int n = 0; n < 3; n++){
+				sims[n] = new GBNSimulator(timeoutOne[i], p, h, C, tau, ber[n], N, 50000);
+				sims[n].start();
+				
+				/*resultstr +=  "," + result;
 				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], N);
-				result = 8*50000*p/gbn.simulate(50000,false);
-				resultstr +=  "," + result;
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], N);
-				result = 8*100000*p/gbn.simulate(100000, false);		
+				result = 8*100000*p/gbn.simulate(100000, false);
+				*/
+				
 			}
+			
+			while(stillExecuting){
+				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
+			}
+			stillExecuting = true;
+			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
+			sims = new GBNSimulator[3];
 			for(int n = 0; n < 3; n++){
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau2, ber[n], N);
-				result = 8*25000*p/gbn.simulate(50000,false);
-				resultstr +=  "," + result;
-				gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], N);
-				result = 8*50000*p/gbn.simulate(100000, false);
+				sims[n] = new GBNSimulator(timeoutTwo[i], p, h, C, tau2, ber[n], N, 50000);
+				sims[n].start();
+				
+				/*gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], N);
+				result = 8*100000*p/gbn.simulate(100000, false);*/
 				
 				
 			}
+			while(stillExecuting){
+				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
+			}
+			stillExecuting = true;
+			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
 			System.out.println(resultstr);
 		}
 		

@@ -164,6 +164,7 @@ public class Lab2 {
 		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		GBNSender gbn;
+		GBNSimulator[] sims = new GBNSimulator[3];
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){

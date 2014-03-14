@@ -9,7 +9,8 @@ public class ABPSimulator implements Runnable {
 	private double p;
 	private boolean nack;
 	public ABPSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int count, boolean nack){
-		s = new ABPSender(timeout, ps, hs, lr, pd, ber);
+		//s = new ABPSender(timeout, ps, hs, lr, pd, ber);
+		s = new ABPSender(5.0*2.5/1000, 1500, 54, 655360, 5.0/1000, 0);
 		this.count = count;
 		this.p = ps;
 		this.nack = nack;
@@ -22,6 +23,7 @@ public class ABPSimulator implements Runnable {
 		// TODO Auto-generated method stub
 		double simres = 8*count*p/s.simulate(count, nack);
 		result = "," + simres;
+		System.out.println(name + result);
 	}
 	
 	public void start(){

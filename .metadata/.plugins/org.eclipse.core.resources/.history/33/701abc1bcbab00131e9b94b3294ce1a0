@@ -1,24 +1,27 @@
 package lab2.simulate;
 
-public class GBNSimulator implements Runnable {
+public class ABPSimulator implements Runnable {
 	private Thread t;
 	String name;
-	private GBNSender s;
+	private ABPSender s;
 	private String result;
 	private int count;
 	private double p;
-	public GBNSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int n, int count){
-		s = new GBNSender(timeout, ps, hs, lr, pd, ber, n);
+	private boolean nack;
+	public ABPSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int count, boolean nack){
+		//s = new ABPSender(timeout, ps, hs, lr, pd, ber);
+		s = new ABPSenderr(5.0*2.5/1000, 1500, 54, 655360, 5.0/1000, 0, 12500, false);
 		this.count = count;
 		this.p = ps;
-		name = "GBN_"+ber+"_"+count;
+		this.nack = nack;
+		name = "ABP"+((nack) ? "N_":"_")+ber+"_"+count;
 	}
 	
 	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		double simres = 8*count*p/s.simulate(count, false);
+		double simres = 8*count*p/s.simulate(count, nack);
 		result = "," + simres;
 		System.out.println(name + result);
 	}
