@@ -84,8 +84,6 @@ public class Lab2 {
 	
 		ABPSender abp;
 		ABPSimulator[] sims = new ABPSimulator[3];
-
-		boolean stillExecuting = true;
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
@@ -102,12 +100,6 @@ public class Lab2 {
 			*/	
 				
 			}
-			while(stillExecuting){
-				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
-			}
-			stillExecuting = true;
-			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
-			
 			for(int n = 0; n < 3; n++){
 				
 				sims[n] = new ABPSimulator(timeoutTwo[i], p, h, C, tau2, ber[n], 50000, false);
@@ -122,12 +114,6 @@ public class Lab2 {
 				*/
 				
 			}
-			
-			while(stillExecuting){
-				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
-			}
-			stillExecuting = true;
-			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
 			System.out.println(resultstr);
 		}
 		

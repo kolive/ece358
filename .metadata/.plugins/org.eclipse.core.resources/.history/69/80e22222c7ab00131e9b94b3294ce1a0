@@ -7,12 +7,10 @@ public class ABPSimulator implements Runnable {
 	private String result;
 	private int count;
 	private double p;
-	private boolean nack;
 	public ABPSimulator(double timeout, double ps, double hs, double lr, double pd, double ber, int count, boolean nack){
 		s = new ABPSender(timeout, ps, hs, lr, pd, ber);
 		this.count = count;
 		this.p = ps;
-		this.nack = nack;
 		name = "ABP"+((nack) ? "N_":"_")+ber+"_"+count;
 	}
 	
@@ -20,7 +18,7 @@ public class ABPSimulator implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		double simres = 8*count*p/s.simulate(count, nack);
+		double simres = 8*count*p/s.simulate(count, false);
 		result = "," + simres;
 	}
 	
