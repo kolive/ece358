@@ -168,7 +168,6 @@ public class Lab2 {
 		boolean stillExecuting = true;
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
-			sims = new GBNSimulator[3];
 			for(int n = 0; n < 3; n++){
 				sims[n] = new GBNSimulator(timeoutOne[i], p, h, C, tau, ber[n], N, 50000);
 				sims[n].start();
@@ -184,7 +183,7 @@ public class Lab2 {
 				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
 			}
 			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
-			sims = new GBNSimulator[3];
+			
 			for(int n = 0; n < 3; n++){
 				sims[n] = new GBNSimulator(timeoutTwo[i], p, h, C, tau, ber[n], N, 50000);
 				sims[n].start();
