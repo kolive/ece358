@@ -90,7 +90,7 @@ public class Lab2 {
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				
-				sims[n] = new ABPSimulator(timeoutOne[i], p, h, C, tau, ber[n], 12500, false);
+				sims[n] = new ABPSimulator(timeoutOne[i], p, h, C, tau, ber[n], 50000, false);
 				sims[n].start();
 				
 				
@@ -110,7 +110,7 @@ public class Lab2 {
 			
 			for(int n = 0; n < 3; n++){
 				
-				sims[n] = new ABPSimulator(timeoutTwo[i], p, h, C, tau2, ber[n], 12500, false);
+				sims[n] = new ABPSimulator(timeoutTwo[i], p, h, C, tau2, ber[n], 50000, false);
 				sims[n].start();
 				
 				/*
