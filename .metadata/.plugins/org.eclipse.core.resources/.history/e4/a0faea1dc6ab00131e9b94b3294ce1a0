@@ -183,7 +183,6 @@ public class Lab2 {
 			while(stillExecuting){
 				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
 			}
-			stillExecuting = true;
 			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
 			sims = new GBNSimulator[3];
 			for(int n = 0; n < 3; n++){
@@ -198,7 +197,6 @@ public class Lab2 {
 			while(stillExecuting){
 				stillExecuting = !sims[0].isComplete() || !sims[1].isComplete() || !sims[2].isComplete();
 			}
-			stillExecuting = true;
 			resultstr += sims[0].getResult() + sims[1].getResult() + sims[2].getResult();
 			System.out.println(resultstr);
 		}
