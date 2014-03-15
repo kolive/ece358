@@ -35,11 +35,22 @@ public class EventScheduler {
 			return timeoutSet.poll();
 		}else if(eventSet.peek().getTime() < timeoutSet.peek().getTime()){
 			return eventSet.poll();
-		}else if(eventSet.peek().getTime() > timeoutSet.peek().getTime()){
+		}else if(eventSet.peek().getTime() >= timeoutSet.peek().getTime()){
 			return timeoutSet.poll();
 		}
 		
 		return null;
+	}
+	
+	public double getNextTimeout(){
+		if(timeoutSet.peek() == null) return Double.MAX_VALUE;
+		return timeoutSet.peek().getTime();
+		
+	}
+	
+	public double getNextAck(){
+		if(eventSet.peek() == null) return Double.MAX_VALUE;
+		return eventSet.peek().getTime();
 	}
 
 	public void purgeTimeouts() {
@@ -49,5 +60,7 @@ public class EventScheduler {
 	public int size(){
 		return timeoutSet.size() + eventSet.size();
 	}
+
+
 
 }

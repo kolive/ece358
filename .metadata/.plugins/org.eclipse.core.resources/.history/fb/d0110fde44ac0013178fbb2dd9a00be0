@@ -1,0 +1,165 @@
+package lab2.simulate;
+import lab2.event.*;
+import lab2.simulate.Buffer;
+
+public class GBNSender {
+	
+	private EventScheduler es;
+	
+	private int sender_sn;
+	private int reciever_rn;
+	private double timeoutValue;
+	private double currentTime;
+	
+	private double packetSize;
+	private double headerSize;
+	private double propDelay;
+	
+	private double ber;
+
+	private double processPTime;
+
+	private double processHTime;
+
+	private int n;
+	private Buffer buffer;
+	
+	public GBNSender(
+			double timeout, double ps, double hs, double lr, double pd, double ber, int n){
+		sender_sn = 0;
+		reciever_rn = 0;
+		timeoutValue = timeout;
+		currentTime = 0;
+		packetSize = ps;
+		headerSize = hs;
+		propDelay = pd;
+		processPTime = (hs + ps)/lr;
+		processHTime = hs/lr;
+		es = new EventScheduler();
+		this.ber = ber;
+		this.n = n;
+		buffer = new Buffer(n, sender_sn);
+	}
+	
+	public Event send(int sn){
+		//TODO: Make sure I'm calculating process and delay properly for both sides
+		
+		//first stretch of the channel begins after processing the FRAME (processTime)
+		Channel.simulate(ber, propDelay, currentTime + processPTime, packetSize + headerSize);
+		boolean forwardDropped = Channel.isPacketDropped();
+		boolean forwardError = Channel.isPacketError();
+		
+		//second stretch of the channel begins after processing the ACK (headerSize / linkRate)
+		Channel.simulate(ber, propDelay, Channel.getLastTime()+ processHTime, headerSize);
+		boolean reverseDropped = Channel.isPacketDropped();
+		boolean reverseError = Channel.isPacketError();
+		
+		if(forwardDropped || reverseDropped){
+			return null;
+		}
+		
+		//generate ack event
+		reciever_rn = (sn+1)%(n+1);
+		return new Event(EventType.ACK, Channel.getLastTime(), reciever_rn, forwardError || reverseError );
+	}
+	
+	public double simulate(int successfulArrivals, boolean nackEnabled){
+		currentTime = 0;
+		Event e;
+		int count = 0;
+		sender_sn = 0;
+		reciever_rn = 1;
+		es = new EventScheduler();
+		buffer = new Buffer(n, sender_sn);
+		while( count < successfulArrivals ){
+			//process next event
+			e = es.dequeue();
+			if(e != null){
+				currentTime = e.getTime();
+				if(e.getType() == EventType.TO){	
+					System.out.println("timeout occured here.");
+					//timeout occurs, resend all packets in buffer
+					if(buffer.getFront().sn == -1)
+						sender_sn = -1;
+					else 
+						sender_sn = buffer.getFront().sn;
+					
+					//resend from sender_sn = head.sn
+					for(int i = 0; i < n; i++){
+						buffer.shift();
+						es.queue(send(buffer.addPacket(packetSize+headerSize, Math.max(buffer.getMaxTime(), currentTime) + processPTime, sender_sn)));
+						sender_sn = (sender_sn+1)%(n+1);
+					}
+					
+					es.purgeTimeouts();
+					es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue));	
+					
+				}else if(!e.isError()){
+				//	System.out.println("3");
+					if(e.getType() == EventType.ACK){
+						
+						//make sure the RN is one of the packets buffered or one more
+						boolean valid = false;
+					/*	for(int i = 0; i < n; i++){
+							System.out.print("Location" + i + ": " + (buffer.getN(i).sn+1)%(n+1) + ",");
+						}*/
+					//	System.out.println();
+					//	System.out.println("sn: " + e.getSN());
+						for(int i = 0; i < n; i++){
+							if(buffer.getN(i).sn != -1 && (buffer.getN(i).sn+1)%(n+1) == e.getSN()){
+								valid = true;
+								i = n+1;//break from the loop
+							}
+						}
+						
+						//count the recieved packets and shift the buffer
+						int oldcount = count;
+						while(valid){
+							if((buffer.getFront().sn+1)%(n+1) == e.getSN()) valid = false;
+							buffer.shift();
+							count++;
+						}
+					
+						//send out new packets
+						//the time that a packet starts being sent is either the current time, or the time after the previous packet finishes processing
+
+					//	System.out.println("1");
+						while(buffer.nextNull != -1){
+							//stop sending packets to process a timeout, if a timeout occurs
+							if(es.getNextTimeout() < Math.max(buffer.getMaxTime(), currentTime) + processPTime) break;
+							es.queue(send(buffer.addPacket(packetSize+headerSize, Math.max(buffer.getMaxTime(), currentTime) + processPTime, sender_sn)));
+							sender_sn = (sender_sn+1)%(n+1);
+						}
+					//	System.out.println("2");
+						if(!(es.getNextTimeout() < Math.max(buffer.getMaxTime(), currentTime) + processPTime)){
+							es.purgeTimeouts();
+							es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue));	
+						}
+					}
+					
+					
+				}
+			}else{
+				//send buffer of packets
+				//the time that a packet starts being sent is either the current time, or the time after the previous packet finishes processing
+				while(buffer.nextNull != -1){
+					//stop sending packets to process a timeout, if a timeout occurs
+					if(es.getNextTimeout() < Math.max(buffer.getMaxTime(), currentTime) + processPTime) break;
+					es.queue(send(buffer.addPacket(packetSize+headerSize, Math.max(buffer.getMaxTime(), currentTime) + processPTime, sender_sn)));
+					sender_sn = (sender_sn+1)%(n+1);
+				}
+				
+				//update timeout, provided that we aren't exiting early because of a timeout
+				if(!(es.getNextTimeout() < Math.max(buffer.getMaxTime(), currentTime) + processPTime)){
+					es.purgeTimeouts();
+					es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue));	
+				}
+				
+			}
+			
+		}
+		return currentTime;
+		
+	}
+
+}

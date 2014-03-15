@@ -17,20 +17,19 @@ public class Channel {
 		return packetError;
 	}
 
-	public static void simulate(double ber, double propDelay, double currentTime, double l) {
-		// TODO Auto-generated method stub
+	public static void simulate(double bitErrorRate, double propDelayInMS, double currentTimeInMS, double lengthInBits) {
 		Random r = new Random();
-		lastTime = propDelay + currentTime;
+		lastTime = propDelayInMS + currentTimeInMS; //time to get accross the channel
 		int errorCount = 0;
 		
-		if(ber == 0){
+		if(bitErrorRate == 0){
 			packetError = false;
 			packetDropped = false;
 			return;
 		}
 		
-		for(int i = 0; i < l*8 && errorCount < 5; i++){
-			if (r.nextInt((int) (1/ber)) == 0) errorCount ++; //a chance of BER of error
+		for(int i = 0; i < lengthInBits && errorCount < 5; i++){
+			if (r.nextInt((int) (1/bitErrorRate)) == 0) errorCount ++; //a chance of BER of error
 		}
 		
 		if(errorCount >= 5){

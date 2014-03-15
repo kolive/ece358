@@ -3,49 +3,35 @@ import lab2.event.*;
 
 public class ABPSender {
 	
-	private EventScheduler es;
 	
-	private int sn;
-	private int nextSN;
-	private double timeoutValue;
-	private double currentTime;
-	
-	private double packetSize;
-	private double headerSize;
-	private double propDelay;
-	
-	private double ber;
-
-	private double processPTime;
-
-	private double processHTime;
+	private double timeoutInS;	
+	private double packetSizeInBits;
+	private double headerSizeInBits;
+	private double propDelayInS;	
+	private double bitErrorRate;
+	private double frameTransmitInS;
+	private double headerTransmitInS;
 	
 	public ABPSender(
-			double timeout, double ps, double hs, double lr, double pd, double ber){
-		sn = 0;
-		nextSN = 1;
-		timeoutValue = timeout;
-		currentTime = 0;
-		packetSize = ps;
-		headerSize = hs;
-		propDelay = pd;
-		processPTime = (hs + ps)/lr;
-		processHTime = hs/lr;
-		es = new EventScheduler();
-		this.ber = ber;
+			double timeoutInS, double packetSizeInBits, double headerSizeInBits, double linkRateInBPS, double propDelayInS, double bitErrorRate){
+		this.timeoutInS = timeoutInS;
+		this.packetSizeInBits = packetSizeInBits;
+		this.headerSizeInBits = headerSizeInBits;
+		this.propDelayInS = propDelayInS;
+		frameTransmitInS = (headerSizeInBits + packetSizeInBits)/linkRateInBPS;
+		headerTransmitInS = headerSizeInBits/linkRateInBPS;
+		this.bitErrorRate = bitErrorRate;
 		
 	}
 	
-	public Event send(int sn){
-		//TODO: Make sure I'm calculating process and delay properly for both sides
-		
-		//first stretch of the channel begins after processing the FRAME (processTime)
-		Channel.simulate(ber, propDelay, currentTime + processPTime, packetSize + headerSize);
+	public Event send(int seqNumber, double currentTimeInS){
+		//first stretch of the channel begins after processing the FRAME must take into account time to transmit FRAME
+		Channel.simulate(bitErrorRate, propDelayInS, currentTimeInS + frameTransmitInS, packetSizeInBits + headerSizeInBits);
 		boolean forwardDropped = Channel.isPacketDropped();
 		boolean forwardError = Channel.isPacketError();
 		
-		//second stretch of the channel begins after processing the ACK (headerSize / linkRate)
-		Channel.simulate(ber, propDelay, Channel.getLastTime()+ processHTime, headerSize);
+		//second stretch of the channel begins after getting the FRAME, must also take into account time to transmit ACK
+		Channel.simulate(bitErrorRate, propDelayInS, Channel.getLastTime() + headerTransmitInS, headerSizeInBits);
 		boolean reverseDropped = Channel.isPacketDropped();
 		boolean reverseError = Channel.isPacketError();
 		
@@ -53,60 +39,70 @@ public class ABPSender {
 			return null;
 		}
 		
-		return new Event(EventType.ACK, Channel.getLastTime(), nextSN, forwardError || reverseError );
+		//sender gets the ack
+		return new Event(EventType.ACK, Channel.getLastTime(), (seqNumber+1)%2, forwardError || reverseError );
 	}
 	
+	//returns throughput
 	public double simulate(int successfulArrivals, boolean nackEnabled){
-		currentTime = 0;
+		
 		Event e;
 		int count = 0;
-		sn = 0;
-		nextSN = 1;
-		es = new EventScheduler();
+		int seqNumber = 0;
+		double currentTimeInS = 0;
+		EventScheduler eventScheduler = new EventScheduler();
 		
 		while( count < successfulArrivals ){
 			//process next event
-			e = es.dequeue();
+			e = eventScheduler.dequeue();
 			if(e != null){
+				currentTimeInS = e.getTime(); 
 				if(e.getType() == EventType.TO){
-					currentTime = e.getTime(); //is there a time to process to?
-					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-					es.queue(send(sn));
+					currentTimeInS = e.getTime();
+					
+					//if there's a timeout, send the new packet and then register the new timeout
+					eventScheduler.queue(send(seqNumber, currentTimeInS));					
+					seqNumber = (seqNumber+1) % 2;
+					eventScheduler.purgeTimeouts();
+					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
+					
 				}else if(!e.isError()){
-					currentTime = e.getTime() + processHTime; //time to process the return header
-					if(e.getSN() == nextSN){
+					//if the rn == sn then packet recieved success
+					if(e.getSN() == seqNumber){
+						
 						count++;
-						es.purgeTimeouts();
-						sn = (sn+1)%2;
-						nextSN = (nextSN+1)%2;
-					/*	System.out.println("abpReceived packet with SN: " + e.getSN() + " next SN to send: " + nextSN);
-						System.out.println("abpcurrent count: " + count);
-						System.out.println("abpcurrent time: " + currentTime);
-						System.out.println("Sending: " + sn);
-						System.out.println("events: " + ecount);*/
-						es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-						es.queue(send(sn));
+						//send a new packet, purge the timeouts
+						eventScheduler.queue(send(seqNumber, currentTimeInS));					
+						seqNumber = (seqNumber+1) % 2;
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
+						
 					}else if(nackEnabled){
-						//should i be purging timeouts here? I think so
-						es.purgeTimeouts();
-						es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-						es.queue(send(sn));
+						//if recieved a nack, then don't wait for timeout to resend
+						seqNumber = e.getSN(); //sn = rn
+						eventScheduler.queue(send(seqNumber, currentTimeInS));		
+						seqNumber = (seqNumber+1) % 2;
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					}
 				}else if(nackEnabled && e.isError()){
-					currentTime = e.getTime(); //is there a time to process to?
-					//should i be purging timeouts here? I think so
-					// Why am I purging timeouts and resending when nackEnabled = true and the event has an error? Shouldn't this happen if the event is a NACK?
-					es.purgeTimeouts();
-					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-					es.queue(send(sn));
+					//if recieved a nack, then don't wait for timeout to resend
+					seqNumber = e.getSN(); //sn = rn
+					eventScheduler.queue(send(seqNumber, currentTimeInS));		
+					seqNumber = (seqNumber+1) % 2;
+					eventScheduler.purgeTimeouts();
+					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 				}
 			}else{
-				es.queue(new Event(EventType.TO, currentTime + processPTime+timeoutValue));	
-				es.queue(send(sn));
+				//send a new packet, purge the timeouts
+				eventScheduler.queue(send(seqNumber, currentTimeInS));					
+				seqNumber = (seqNumber+1) % 2;
+				eventScheduler.purgeTimeouts();
+				eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 			}
 			
 		}
-		return currentTime;
+		return (count*packetSizeInBits)/(currentTimeInS); //returns throughput in bps
 		
 	}
 

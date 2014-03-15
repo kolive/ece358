@@ -1,0 +1,109 @@
+package lab2.simulate;
+import lab2.event.*;
+
+public class ABPSender {
+	
+	
+	private double timeoutInMS;	
+	private double packetSizeInBits;
+	private double headerSizeInBits;
+	private double propDelayInMS;	
+	private double bitErrorRate;
+	private double frameTransmitInMS;
+	private double headerTransmitInMS;
+	
+	public ABPSender(
+			double timeoutInMS, double packetSizeInBits, double headerSizeInBits, double linkRateInBPS, double propDelayInMS, double bitErrorRate){
+		this.timeoutInMS = timeoutInMS;
+		this.packetSizeInBits = packetSizeInBits;
+		this.headerSizeInBits = headerSizeInBits;
+		this.propDelayInMS = propDelayInMS;
+		frameTransmitInMS = (headerSizeInBits + packetSizeInBits)/linkRateInBPS;
+		headerTransmitInMS = headerSizeInBits/linkRateInBPS;
+		this.bitErrorRate = bitErrorRate;
+		
+	}
+	
+	public Event send(int seqNumber, double currentTimeInMS){
+		//first stretch of the channel begins after processing the FRAME must take into account time to transmit FRAME
+		Channel.simulate(bitErrorRate, propDelayInMS, currentTimeInMS + frameTransmitInMS, packetSizeInBits + headerSizeInBits);
+		boolean forwardDropped = Channel.isPacketDropped();
+		boolean forwardError = Channel.isPacketError();
+		
+		//second stretch of the channel begins after getting the FRAME, must also take into account time to transmit ACK
+		Channel.simulate(bitErrorRate, propDelayInMS, Channel.getLastTime() + headerTransmitInMS, headerSizeInBits);
+		boolean reverseDropped = Channel.isPacketDropped();
+		boolean reverseError = Channel.isPacketError();
+		
+		if(forwardDropped || reverseDropped){
+			return null;
+		}
+		
+		//sender gets the ack
+		return new Event(EventType.ACK, Channel.getLastTime(), (seqNumber+1)%2, forwardError || reverseError );
+	}
+	
+	//returns throughput
+	public double simulate(int successfulArrivals, boolean nackEnabled){
+		
+		Event e;
+		int count = 0;
+		int seqNumber = 0;
+		double currentTimeInMS = 0;
+		EventScheduler eventScheduler = new EventScheduler();
+		
+		while( count < successfulArrivals ){
+			//process next event
+			e = eventScheduler.dequeue();
+			if(e != null){
+				currentTimeInMS = e.getTime(); 
+				if(e.getType() == EventType.TO){
+					currentTimeInMS = e.getTime();
+					
+					//if there's a timeout, send the new packet and then register the new timeout
+					eventScheduler.queue(send(seqNumber, currentTimeInMS));					
+					seqNumber = (seqNumber+1) % 2;
+					eventScheduler.purgeTimeouts();
+					eventScheduler.queue(new Event(EventType.TO, currentTimeInMS+timeoutInMS+frameTransmitInMS));	
+					
+				}else if(!e.isError()){
+					//if the rn == sn then packet recieved success
+					if(e.getSN() == seqNumber){
+						
+						count++;
+						//send a new packet, purge the timeouts
+						eventScheduler.queue(send(seqNumber, currentTimeInMS));					
+						seqNumber = (seqNumber+1) % 2;
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, currentTimeInMS+timeoutInMS+frameTransmitInMS));	
+						
+					}else if(nackEnabled){
+						//if recieved a nack, then don't wait for timeout to resend
+						seqNumber = e.getSN(); //sn = rn
+						eventScheduler.queue(send(seqNumber, currentTimeInMS));		
+						seqNumber = (seqNumber+1) % 2;
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, currentTimeInMS+timeoutInMS+frameTransmitInMS));	
+					}
+				}else if(nackEnabled && e.isError()){
+					//if recieved a nack, then don't wait for timeout to resend
+					seqNumber = e.getSN(); //sn = rn
+					eventScheduler.queue(send(seqNumber, currentTimeInMS));		
+					seqNumber = (seqNumber+1) % 2;
+					eventScheduler.purgeTimeouts();
+					eventScheduler.queue(new Event(EventType.TO, currentTimeInMS+timeoutInMS+frameTransmitInMS));	
+				}
+			}else{
+				//send a new packet, purge the timeouts
+				eventScheduler.queue(send(seqNumber, currentTimeInMS));					
+				seqNumber = (seqNumber+1) % 2;
+				eventScheduler.purgeTimeouts();
+				eventScheduler.queue(new Event(EventType.TO, currentTimeInMS+timeoutInMS+frameTransmitInMS));	
+			}
+			
+		}
+		return (count*packetSizeInBits)/(currentTimeInMS*1000); //returns throughput in bps
+		
+	}
+
+}

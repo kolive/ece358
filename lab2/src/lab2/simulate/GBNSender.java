@@ -3,54 +3,41 @@ import lab2.event.*;
 import lab2.simulate.Buffer;
 
 public class GBNSender {
-	
-	private EventScheduler es;
-	
-	private int sender_sn;
-	private int reciever_rn;
-	private double timeoutValue;
-	private double currentTime;
-	
-	private double packetSize;
-	private double headerSize;
-	private double propDelay;
-	
-	private double ber;
-
-	private double processPTime;
-
-	private double processHTime;
-
-	private int n;
-	private Buffer buffer;
+		
+	private double timeoutInS;	
+	private double packetSizeInBits;
+	private double headerSizeInBits;
+	private double propDelayInS;	
+	private double bitErrorRate;
+	private double frameTransmitInS;
+	private double headerTransmitInS;
+	private int bufferSize;
+	private int reqNumber;
 	
 	public GBNSender(
-			double timeout, double ps, double hs, double lr, double pd, double ber, int n){
-		sender_sn = 0;
-		reciever_rn = 1;
-		timeoutValue = timeout;
-		currentTime = 0;
-		packetSize = ps;
-		headerSize = hs;
-		propDelay = pd;
-		processPTime = (hs + ps)/lr;
-		processHTime = hs/lr;
-		es = new EventScheduler();
-		this.ber = ber;
-		this.n = n;
-		buffer = new Buffer(n, sender_sn);
+			double timeoutInS, double packetSizeInBits, double headerSizeInBits, double linkRateInBPS, double propDelayInS, double bitErrorRate, int bufferSize){
+		this.timeoutInS = timeoutInS;
+		this.packetSizeInBits = packetSizeInBits;
+		this.headerSizeInBits = headerSizeInBits;
+		this.propDelayInS = propDelayInS;
+		frameTransmitInS = (headerSizeInBits + packetSizeInBits)/linkRateInBPS;
+		headerTransmitInS = headerSizeInBits/linkRateInBPS;
+		this.bitErrorRate = bitErrorRate;
+		this.bufferSize = bufferSize;
+		
 	}
 	
-	public Event send(int sn){
-		//TODO: Make sure I'm calculating process and delay properly for both sides
-		
-		//first stretch of the channel begins after processing the FRAME (processTime)
-		Channel.simulate(ber, propDelay, currentTime + processPTime, packetSize + headerSize);
+	public Event send(int seqNumber, double currentTimeInS){
+		//first stretch of the channel begins after processing the FRAME must take into account time to transmit FRAME
+		Channel.simulate(bitErrorRate, propDelayInS, currentTimeInS + frameTransmitInS, packetSizeInBits + headerSizeInBits);
 		boolean forwardDropped = Channel.isPacketDropped();
 		boolean forwardError = Channel.isPacketError();
+
+		if(!forwardDropped && !forwardError && seqNumber == reqNumber) 
+			reqNumber = (reqNumber+1)%(bufferSize+1);
 		
-		//second stretch of the channel begins after processing the ACK (headerSize / linkRate)
-		Channel.simulate(ber, propDelay, Channel.getLastTime()+ processHTime, headerSize);
+		//second stretch of the channel begins after getting the FRAME, must also take into account time to transmit ACK
+		Channel.simulate(bitErrorRate, propDelayInS, Channel.getLastTime() + headerTransmitInS, headerSizeInBits);
 		boolean reverseDropped = Channel.isPacketDropped();
 		boolean reverseError = Channel.isPacketError();
 		
@@ -58,87 +45,125 @@ public class GBNSender {
 			return null;
 		}
 		
-		//generate ack event
-		reciever_rn = (sender_sn+1)%(n+1);
-		return new Event(EventType.ACK, Channel.getLastTime(), reciever_rn, forwardError || reverseError );
+		//sender gets the ack
+		return new Event(EventType.ACK, Channel.getLastTime(), reqNumber, forwardError || reverseError );
 	}
 	
 	public double simulate(int successfulArrivals, boolean nackEnabled){
-		currentTime = 0;
 		Event e;
 		int count = 0;
-		sender_sn = 0;
-		reciever_rn = 1;
-		es = new EventScheduler();
-		buffer = new Buffer(n, sender_sn);
+		int seqNumber = 0;
+		reqNumber = 0;
+		double currentTimeInS = 0;
+		EventScheduler eventScheduler = new EventScheduler();
+		Buffer buffer = new Buffer(bufferSize, seqNumber);
+		
 		while( count < successfulArrivals ){
 			//process next event
-			e = es.dequeue();
+			e = eventScheduler.dequeue();
 			if(e != null){
-				currentTime = e.getTime();
-				if(e.getType() == EventType.TO){
-				//	System.out.println("TIMEOUT " + currentTime);
-				//	System.out.println("EVENT SET SIZE: " + es.size());
-					//process a timeout event
-					currentTime = e.getTime(); //is there a time to process to?
-					
-					//timeout occurs, resend all packets in buffer
-					es.purgeTimeouts();
-					es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-					//System.out.println("4");
-					for(int i = 0; i < n; i++){
-						int tmpsn = buffer.getN(i).sn;
-						if(tmpsn != -1){
-							es.queue(send(tmpsn)); //if the buffer spot isn't empty resend that packet
-							buffer.getN(i).time = currentTime + i*processPTime;
-							//System.out.println("Sending: " + sender_sn);
+				currentTimeInS = e.getTime();
+				if(e.getType() == EventType.TO){	
+					//set all packets in the buffer to "unsent" state
+					buffer.setAllUnsent();
+					//try to send again
+					eventScheduler.purgeTimeouts();
+					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
+					boolean escape = false;
+					do{	
+						if(buffer.nextUnsent != -1){
+							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
+							currentTimeInS = currentTimeInS + frameTransmitInS;	
+							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							if(currentTimeInS >= eventScheduler.getNextAck()){
+								escape = true;
+							}
 						}
-					}
-					//System.out.println("5");
+						
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
 					
+		
 				}else if(!e.isError()){
-					//process an error free ack 
-					currentTime = e.getTime() + processHTime; //time to process the return header
-					//if the ack is good, then shift the buffer until we get to the element with the same sn as the ack
-					if(e.getType() == EventType.ACK){
-						if(currentTime < buffer.getMaxTime()){
-							//if the current ack time is during a "processing time", delay it until after processing
-							es.queue(new Event(EventType.ACK, buffer.getMaxTime() + processPTime, e.getSN(), e.isError()));
-							continue;
-						}
-						do{
-							count++;
-							buffer.shift();
-						} while (buffer.getFront().sn != -1 && buffer.getFront().sn != e.getSN());
-						//System.out.println("count: " + count);
-						int x = 0;
-						while(buffer.nextNull != -1){
-							es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime, sender_sn)));
-							sender_sn = (sender_sn+1)%(n+1);
-							x++;
-							// TODO: you aren't updating current time properly. when you send a bunch of packets it fucks up the simulation
-						}
-						//System.out.println("1");
-						//we also have to reset the timeout based on when the next unacked packet
-						es.purgeTimeouts();
-						es.queue(new Event(EventType.TO, buffer.getFront().time+timeoutValue+processPTime));
+				
+					//this is an ack
+					//slide the window until we've counted all the ack'd packets
+					//prepare new packets
+					//shift until the next unacked packet is at the front
+					while(buffer.getFront().sn != -1 && buffer.getFront().time != -2 && buffer.getFront().sn != e.getSN()){						
+						count++;
+						buffer.shift();
+						buffer.prepareFrame(packetSizeInBits+headerSizeInBits, seqNumber);
+						seqNumber = (seqNumber+1)%(bufferSize+1);
 					}
+
+					//set next timeout
+					if(buffer.getFront().sn != -1 && buffer.getFront().time != -2){
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, buffer.getFront().time+timeoutInS));	
+					}else{
+						eventScheduler.purgeTimeouts();
+						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
+					}
+					
+					//keep trying to send any unsent packets
+					boolean escape = false;
+					do{	
+						if(buffer.nextUnsent != -1){
+							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
+							currentTimeInS = currentTimeInS + frameTransmitInS;	
+							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							if(currentTimeInS >= eventScheduler.getNextAck()){
+								escape = true;
+							}
+						}
+						
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
+					
+				}else if(e.isError()){
+					//if the event is actually in error, pretend we didn't get it and keep trying to send the buffer
+					boolean escape = false;
+					do{	
+						if(buffer.nextUnsent != -1){
+							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
+							currentTimeInS = currentTimeInS + frameTransmitInS;	
+							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							if(currentTimeInS >= eventScheduler.getNextAck()){
+								escape = true;
+							}
+						}
+						
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
+					
 				}
 			}else{
-				es.purgeTimeouts();
-				es.queue(new Event(EventType.TO, currentTime+timeoutValue+processPTime));	
-				int x = 0;
-				//System.out.println("2");
-				while(buffer.nextNull != -1){
-					es.queue(send(buffer.addPacket(packetSize+headerSize, currentTime + x*processPTime, sender_sn)));
-					sender_sn = (sender_sn+1)%(n+1);
-					x++;
+				
+				//prepare a buffer of n packets
+				for(int i = 0; i < bufferSize; i++){
+					buffer.prepareFrame(packetSizeInBits+headerSizeInBits, seqNumber);
+					seqNumber = (seqNumber+1)%(bufferSize+1);
 				}
-				//System.out.println("3");
+				
+				eventScheduler.purgeTimeouts();
+				eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
+				boolean escape = false;
+				do{	
+					if(buffer.nextUnsent != -1){
+						eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
+						currentTimeInS = currentTimeInS + frameTransmitInS;	
+						//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+						if(currentTimeInS >= eventScheduler.getNextAck()){
+							escape = true;
+						}
+					}
+					
+				}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);					
+				
+				
+				//if there's an event that occurs during processing break and let handler get it
 			}
 			
 		}
-		return currentTime;
+		return (count*packetSizeInBits)/(currentTimeInS); //returns throughput in bps
 		
 	}
 

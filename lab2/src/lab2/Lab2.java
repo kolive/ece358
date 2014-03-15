@@ -2,7 +2,6 @@ package lab2;
 
 import lab2.simulate.ABPSender;
 import lab2.simulate.GBNSender;
-import lab2.simulate.GBNSimulator;
 
 public class Lab2 {
 
@@ -18,67 +17,31 @@ public class Lab2 {
 		}else if(args[0].equals( "3" )){
 			questionThree();
 		}else{
-			GBNvABP();
-			/*System.out.println("ABP RESULTS");
+			System.out.println("ABP RESULTS");
 			questionOne();
 			System.out.println("ABP_NACK RESULTS");
 			questionTwo();
 			System.out.println("GBN RESULTS");
-			questionThree();*/
+			questionThree();
 		}
 	}
 
-	private static void GBNvABP() {
-		double tau = 5.0/1000; //tau in s
-		double tau2 = 250.0/1000;
-		double C = 655360.0; //c in b/s
-		double h = 54.0;
-		double p = 1500.0;
-		int N = 4;
-		double[] timeoutOne = {(2.5 * tau), (5 * tau), (10 * tau), 7.5 * tau,  (12.5 * tau) };
-		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2, 10 * tau2, 12.5 * tau2 };
-		double[] ber = {0, 0.00001, 0.0001};
-		double result; 
-		String resultstr;
-		
-		
-		System.out.println("\u0394 / \u03c4 , 2\u03c4 = 10ms,,, 2\u03c4 = 500ms,,,");
-		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
-	
-		GBNSender gbn;
-		ABPSender abp;
-		for(int i = 0; i < 1; i++){
-			resultstr = Double.toString(timeoutOne[i]/tau);
-			for(int n = 0; n < 1; n++){
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[2], 4);
-				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[2]);
-			//	System.out.println("ABP result: " + 8*50000*p/abp.simulate(50000,false));
-				
-				//result = 8*50000*p/gbn.simulate(50000,false);
-				System.out.println("GBN1 result: " + 8*50000*p/gbn.simulate(50000,false));
-				
-				
-				
-			}
 
-		}
-		
-	}
 
 	public static void questionOne(){
 		double tau = 5.0/1000; //tau in s
-		double tau2 = 250.0/1000;
-		double C = 655360.0; //c in b/s
-		double h = 54.0;
-		double p = 1500.0;
-		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau, (10 * tau), (12.5 * tau) };
+		double tau2 = 250.0/1000; //tau2 in s
+		double C = 5242880.0; //c in b/s
+		double h = 8*54.0; //h in b
+		double p = 8*1500.0; //p in b
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau, (10 * tau), (12.5 * tau) }; //timeouts in s
 		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
 		double result; 
 		String resultstr;
 		
 		
-		System.out.println("\u0394 / \u03c4 , 2\u03c4 = 10ms,,, 2\u03c4 = 500ms,,,");
+		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
 		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		ABPSender abp;
@@ -86,20 +49,26 @@ public class Lab2 {
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
-				result = 8*12500*p/abp.simulate(12500,false);
+				result = abp.simulate(12500,false);
 				resultstr +=  "," + result;
-				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
-				result = 8*25000*p/abp.simulate(25000, false);
 				
+				//for stability check, commented out for test runs
+				/*
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				result = abp.simulate(25000, false);
+				*/
 				
 			}
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
-				result = 8*12500*p/abp.simulate(12500,false);
+				result = abp.simulate(12500,false);
 				resultstr +=  ","+ result;
-				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
-				result = 8*25000*p/abp.simulate(25000, false);
 				
+				//for stability check, commented out for test runs
+				/*
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
+				result = abp.simulate(25000, false);
+				*/
 				
 			}
 			System.out.println(resultstr);
@@ -109,16 +78,18 @@ public class Lab2 {
 	
 	public static void questionTwo(){
 		double tau = 5.0/1000; //tau in s
-		double tau2 = 250.0/1000;
-		double C = 655360.0; //c in b/s
-		double h = 54.0;
-		double p = 1500.0;
-		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau,  (10 * tau), (12.5 * tau) };
+		double tau2 = 250.0/1000; //tau2 in s
+		double C = 5242880.0; //c in b/s
+		double h = 8*54.0; //h in b
+		double p = 8*1500.0; //p in b
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau, (10 * tau), (12.5 * tau) }; //timeouts in s
 		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
+		double result; 
 		String resultstr;
-		double result;
-		System.out.println("\u0394 / \u03c4 , 2\u03c4 = 10ms,,, 2\u03c4 = 500ms,,,");
+		
+		
+		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
 		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		ABPSender abp;
@@ -126,59 +97,73 @@ public class Lab2 {
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
-				result = 8*12500*p/abp.simulate(12500,true);
+				result = abp.simulate(12500,true);
 				resultstr +=  "," + result;
-				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
-				result = 8*25000*p/abp.simulate(25000, true);
 				
+				//for stability check, commented out for test runs
+				/*
+				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
+				result = abp.simulate(25000, true);
+				*/
 				
 			}
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
-				result = 8*12500*p/abp.simulate(12500,true);
-				resultstr +=  "," + result;
-				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
-				result = 8*25000*p/abp.simulate(25000, true);
+				result = abp.simulate(12500,true);
+				resultstr +=  ","+ result;
 				
+				//for stability check, commented out for test runs
+				/*
+				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
+				result = abp.simulate(25000, true);
+				*/
 				
 			}
 			System.out.println(resultstr);
 		}
+		
 	}
 	
 	public static void questionThree(){
 		double tau = 5.0/1000; //tau in s
-		double tau2 = 250.0/1000;
-		double C = 655360.0; //c in b/s
-		double h = 54.0;
-		double p = 1500.0;
-		int N = 4;
-		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau, (10 * tau),  (12.5 * tau) };
-		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2, 10 * tau2, 12.5 * tau2 };
+		double tau2 = 250.0/1000; //tau2 in s
+		double C = 5242880.0; //c in b/s
+		double h = 8*54.0; //h in b
+		double p = 8*1500.0; //p in b
+		double[] timeoutOne = {(2.5 * tau), (5 * tau), 7.5 * tau, (10 * tau), (12.5 * tau) }; //timeouts in s
+		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
 		double result; 
 		String resultstr;
 		
 		
-		System.out.println("\u0394 / \u03c4 , 2\u03c4 = 10ms,,, 2\u03c4 = 500ms,,,");
-		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
+		//System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
+		//System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		GBNSender gbn;
 		for(int i = 0; i < timeoutOne.length; i++){
 			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], N);
-				result = 8*50000*p/gbn.simulate(50000,false);
+				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 4);
+				result = gbn.simulate(25000,false);
 				resultstr +=  "," + result;
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], N);
-				result = 8*100000*p/gbn.simulate(100000, false);		
+				
+				//for stability check, commented out for test runs
+				/*
+				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 4);
+				result = gbn.simulate(100000, false);
+				*/		
 			}
 			for(int n = 0; n < 3; n++){
-				gbn = new GBNSender(timeoutOne[i], p, h, C, tau2, ber[n], N);
-				result = 8*25000*p/gbn.simulate(50000,false);
+				gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], 4);
+				result = gbn.simulate(25000,false);
 				resultstr +=  "," + result;
-				gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], N);
-				result = 8*50000*p/gbn.simulate(100000, false);
+				
+				//for stability check, commented out for test runs
+				/* 
+				gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], 4);
+				result = gbn.simulate(50000, false);
+				*/
 				
 				
 			}
