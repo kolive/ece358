@@ -1,8 +1,6 @@
 ./simulate/GBNSender.java
-./simulate/ABPSimulator.java
 ./simulate/ABPSender.java
 ./simulate/Buffer.java
-./simulate/GBNSimulator.java
 ./simulate/Channel.java
 ./Lab2.java
 ./event/EventType.java

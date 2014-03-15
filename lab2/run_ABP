@@ -1,0 +1,6 @@
+./build
+cd ./bin
+
+java lab2/Lab2 1 > ABP.csv
+
+

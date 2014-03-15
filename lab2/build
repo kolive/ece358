@@ -1,6 +1,4 @@
 
-rm -rf ./bin/
-mkdir bin
 cd src/lab2/ 
 find -name "*.java" >sources.txt
 javac -d ../../bin/ @sources.txt
