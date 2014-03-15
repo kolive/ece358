@@ -38,7 +38,7 @@ public class Lab2 {
 		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
 		double result; 
-		String resultstr = "";
+		String resultstr;
 		
 		
 		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
@@ -46,7 +46,7 @@ public class Lab2 {
 	
 		ABPSender abp;
 		for(int i = 0; i < timeoutOne.length; i++){
-			//resultstr = Double.toString(timeoutOne[i]/tau);
+			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = abp.simulate(12500,false);
@@ -86,7 +86,7 @@ public class Lab2 {
 		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
 		double result; 
-		String resultstr = "";
+		String resultstr;
 		
 		
 		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
@@ -94,7 +94,7 @@ public class Lab2 {
 	
 		ABPSender abp;
 		for(int i = 0; i < timeoutOne.length; i++){
-			//resultstr = Double.toString(timeoutOne[i]/tau);
+			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = abp.simulate(12500,true);
@@ -134,7 +134,7 @@ public class Lab2 {
 		double[] timeoutTwo = {2.5 * tau2, 5 * tau2, 7.5 * tau2,  10 * tau2, 12.5 * tau2 };
 		double[] ber = {0, 0.00001, 0.0001};
 		double result; 
-		String resultstr = "";
+		String resultstr;
 		
 		
 		//System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
@@ -142,7 +142,7 @@ public class Lab2 {
 	
 		GBNSender gbn;
 		for(int i = 0; i < timeoutOne.length; i++){
-			//resultstr = Double.toString(timeoutOne[i]/tau);
+			resultstr = Double.toString(timeoutOne[i]/tau);
 			for(int n = 0; n < 3; n++){
 				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 4);
 				result = gbn.simulate(25000,false);
