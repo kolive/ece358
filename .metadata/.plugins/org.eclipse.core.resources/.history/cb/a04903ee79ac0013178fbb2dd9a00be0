@@ -41,8 +41,8 @@ public class Lab2 {
 		String resultstr = "";
 		
 		
-		//System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
-		//System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
+		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
+		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		ABPSender abp;
 		for(int i = 0; i < timeoutOne.length; i++){
@@ -89,8 +89,8 @@ public class Lab2 {
 		String resultstr = "";
 		
 		
-		//System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
-		//System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
+		System.out.println("Delta / Tau , 2Tau = 10ms,,, 2Tau = 500ms,,,");
+		System.out.println(",BER=0.0, BER=1e-5, BER=1e-4, BER=0.0, BER=1e-5, BER=1e-4");
 	
 		ABPSender abp;
 		for(int i = 0; i < timeoutOne.length; i++){
