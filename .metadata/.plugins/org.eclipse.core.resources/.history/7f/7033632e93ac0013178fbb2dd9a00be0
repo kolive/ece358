@@ -72,7 +72,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 	}
@@ -121,7 +120,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 	}
@@ -170,7 +168,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 		
