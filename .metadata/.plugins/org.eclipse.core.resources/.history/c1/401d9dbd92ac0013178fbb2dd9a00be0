@@ -50,7 +50,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = abp.simulate(12500,false);
-				resultstr += result + ",";
+				resultstr +=  "," + result;
 				
 				//for stability check, commented out for test runs
 				/*
@@ -62,7 +62,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
 				result = abp.simulate(12500,false);
-				resultstr += result + ",";
+				resultstr +=  ","+ result;
 				
 				//for stability check, commented out for test runs
 				/*
@@ -72,7 +72,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 	}
@@ -99,7 +98,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutOne[i], p, h, C, tau, ber[n]);
 				result = abp.simulate(12500,true);
-				resultstr += result + ",";
+				resultstr +=  "," + result;
 				
 				//for stability check, commented out for test runs
 				/*
@@ -111,7 +110,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				abp = new ABPSender(timeoutTwo[i], p, h, C, tau2, ber[n]);
 				result = abp.simulate(12500,true);
-				resultstr += result + ",";
+				resultstr +=  ","+ result;
 				
 				//for stability check, commented out for test runs
 				/*
@@ -121,7 +120,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 	}
@@ -148,7 +146,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				gbn = new GBNSender(timeoutOne[i], p, h, C, tau, ber[n], 4);
 				result = gbn.simulate(25000,false);
-				resultstr += result + ",";
+				resultstr +=  "," + result;
 				
 				//for stability check, commented out for test runs
 				/*
@@ -159,7 +157,7 @@ public class Lab2 {
 			for(int n = 0; n < 3; n++){
 				gbn = new GBNSender(timeoutTwo[i], p, h, C, tau2, ber[n], 4);
 				result = gbn.simulate(25000,false);
-				resultstr += result + ",";
+				resultstr +=  "," + result;
 				
 				//for stability check, commented out for test runs
 				/* 
@@ -170,7 +168,6 @@ public class Lab2 {
 				
 			}
 			System.out.println(resultstr);
-			resultstr = "";
 		}
 		
 		
