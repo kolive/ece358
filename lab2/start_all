@@ -1,0 +1,5 @@
+#!/bin/bash
+
+./run_ABP &
+./run_GBN &
+./run_ABP_NACK & 
