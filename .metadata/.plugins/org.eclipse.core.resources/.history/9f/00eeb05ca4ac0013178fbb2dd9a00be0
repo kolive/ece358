@@ -42,10 +42,14 @@ public class EventScheduler {
 		return null;
 	}
 	
-	public double getNextTime(){
-		if(timeoutSet.peek() == null && eventSet.peek() == null) return Double.MAX_VALUE;
-		else if(eventSet.peek() != null && timeoutSet.peek() != null) return Math.min(eventSet.peek().getTime(), timeoutSet.peek().getTime());
-		else if(eventSet.peek() == null && timeoutSet.peek() != null) return timeoutSet.peek().getTime();
+	public double getNextTimeout(){
+		if(timeoutSet.peek() == null) return Double.MAX_VALUE;
+		return timeoutSet.peek().getTime();
+		
+	}
+	
+	public double getNextAck(){
+		if(eventSet.peek() == null) return Double.MAX_VALUE;
 		return eventSet.peek().getTime();
 	}
 
@@ -56,6 +60,7 @@ public class EventScheduler {
 	public int size(){
 		return timeoutSet.size() + eventSet.size();
 	}
+
 
 
 }
