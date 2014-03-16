@@ -63,7 +63,6 @@ public class GBNSender {
 			e = eventScheduler.dequeue();
 			if(e != null){
 				currentTimeInS = e.getTime();
-				if(buffer.maxtime > currentTimeInS) currentTimeInS = buffer.maxtime;
 				if(e.getType() == EventType.TO){	
 					//set all packets in the buffer to "unsent" state
 					buffer.setAllUnsent();
@@ -72,6 +71,7 @@ public class GBNSender {
 					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					boolean escape = false;
 					do{	
+						currentTimeInS = buffer.maxtime;
 						if(buffer.nextUnsent != -1){
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
