@@ -1,3 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
+	<section name="conditionHistory">
+		<item value="3" key="conditionHistoryEntryCount"/>
+		<item value="count &gt; 3000" key="conditionHistoryEntry_0"/>
+		<item value="count == 4" key="conditionHistoryEntry_1"/>
+		<item value="ec != 0 &amp;&amp; e == null" key="conditionHistoryEntry_2"/>
+	</section>
 </section>

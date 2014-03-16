@@ -1,5 +1,12 @@
 package lab2.simulate;
 import java.util.Random;
+
+/**
+ * Models the channel and receiver in terms of propogation delay and probabilities of errors
+ * 
+ * @author kolive
+ *
+ */
 public class Channel {
 	
 	static double lastTime; //the time after processing through a channel
@@ -8,12 +15,10 @@ public class Channel {
 	
 	
 	public static boolean isPacketDropped() {
-		// TODO Auto-generated method stub
 		return packetDropped;
 	}
 
 	public static boolean isPacketError() {
-		// TODO Auto-generated method stub
 		return packetError;
 	}
 
@@ -28,6 +33,7 @@ public class Channel {
 			return;
 		}
 		
+		//keep checking bits to see if they are in error, or quit when the max error rate has been met
 		for(int i = 0; i < lengthInBits && errorCount < 5; i++){
 			if (r.nextInt((int) (1/bitErrorRate)) == 0) errorCount ++; //a chance of BER of error
 		}
@@ -45,7 +51,6 @@ public class Channel {
 	}
 
 	public static double getLastTime() {
-		// TODO Auto-generated method stub
 		return lastTime;
 	}
 

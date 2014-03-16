@@ -1,7 +1,13 @@
 package lab2.simulate;
 import lab2.event.*;
-import lab2.simulate.Buffer;
 
+/**
+ * GBPSender is a simulator for a one way transmission using GBN retransmission scheme.
+ * Simulation should be started by instantiating with correct params and then calling simulate()
+ * 
+ * @author kolive
+ *
+ */
 public class GBNSender {
 		
 	private double timeoutInS;	
@@ -16,6 +22,8 @@ public class GBNSender {
 	
 	public GBNSender(
 			double timeoutInS, double packetSizeInBits, double headerSizeInBits, double linkRateInBPS, double propDelayInS, double bitErrorRate, int bufferSize){
+		
+		//setup simulation constants
 		this.timeoutInS = timeoutInS;
 		this.packetSizeInBits = packetSizeInBits;
 		this.headerSizeInBits = headerSizeInBits;
@@ -27,6 +35,16 @@ public class GBNSender {
 		
 	}
 	
+	/**
+	 * Simulates the channel and receiver as one blackbox.
+	 * Channel is a static class which wraps the error and propagation calculations 
+	 *
+	 * Also keeps track of reqNumber. 
+	 *
+	 * @param seqNumber
+	 * @param currentTimeInS
+	 * @return a null event if the frame was simulated to be dropped, otherwise an ACK
+	 */
 	public Event send(int seqNumber, double currentTimeInS){
 		//first stretch of the channel begins after processing the FRAME must take into account time to transmit FRAME
 		Channel.simulate(bitErrorRate, propDelayInS, currentTimeInS + frameTransmitInS, packetSizeInBits + headerSizeInBits);
@@ -49,7 +67,16 @@ public class GBNSender {
 		return new Event(EventType.ACK, Channel.getLastTime(), reqNumber, forwardError || reverseError );
 	}
 	
-	public double simulate(int successfulArrivals, boolean nackEnabled){
+	/**
+	 * Simulates the transmission of identical packets using GBN retransmission scheme.
+	 * Returns the throughput of the scheme in bps 
+	 * 
+	 * @param successfulArrivals is the count of packets that must be received and ack'd before the simulation is complete
+	 * @return a double, representing the throughput of the scheme in bits per second
+	 */
+	public double simulate(int successfulArrivals){
+		
+		//setup simulation state
 		Event e;
 		int count = 0;
 		int seqNumber = 0;
@@ -58,12 +85,15 @@ public class GBNSender {
 		EventScheduler eventScheduler = new EventScheduler();
 		Buffer buffer = new Buffer(bufferSize, seqNumber);
 		
+		//main processing loop
 		while( count < successfulArrivals ){
 			//process next event
 			e = eventScheduler.dequeue();
 			if(e != null){
+				//set the current time. if the current time is less than the buffer's max time, then update it (to avoid concurrent transmissions)
 				currentTimeInS = e.getTime();
 				if(buffer.maxtime > currentTimeInS) currentTimeInS = buffer.maxtime;
+				
 				if(e.getType() == EventType.TO){	
 					//set all packets in the buffer to "unsent" state
 					buffer.setAllUnsent();
@@ -72,25 +102,24 @@ public class GBNSender {
 					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					boolean escape = false;
 					do{	
-						if(buffer.nextUnsent != -1){
+						if(buffer.existsUnsent()){
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
-							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							//stop transmitting if there's an event to process
 							if(currentTimeInS >= eventScheduler.getNextTime()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);		
+					}while(!escape && buffer.existsUnsent());		
 					
 		
 				}else if(!e.isError()){
 				
 					//this is an ack
-					//slide the window until we've counted all the ack'd packets
-					//prepare new packets
 					//shift until the next unacked packet is at the front
-					while(buffer.getFront().sn != -1 && buffer.getFront().time != -2 && buffer.getFront().sn != e.getSN()){						
+					//prepare new packets in buffer
+					while(!buffer.isFrontNull() && !buffer.isFrontUnsent() && !buffer.compareFrontSN(e.getSN())){						
 						count++;
 						buffer.shift();
 						buffer.prepareFrame(packetSizeInBits+headerSizeInBits, seqNumber);
@@ -98,10 +127,12 @@ public class GBNSender {
 					}
 
 					//set next timeout
-					if(buffer.getFront().sn != -1 && buffer.getFront().time != -2){
+					if(!buffer.isFrontNull() && !buffer.isFrontUnsent()){
+						//if there's already a sent packet at the head
 						eventScheduler.purgeTimeouts();
 						eventScheduler.queue(new Event(EventType.TO, buffer.getFront().time+timeoutInS));	
 					}else{
+						//otherwise, that packet needs to be sent
 						eventScheduler.purgeTimeouts();
 						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					}
@@ -109,31 +140,31 @@ public class GBNSender {
 					//keep trying to send any unsent packets
 					boolean escape = false;
 					do{	
-						if(buffer.nextUnsent != -1){
+						if(buffer.existsUnsent()){
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
-							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							//stop transmitting if there's an event to process
 							if(currentTimeInS >= eventScheduler.getNextTime()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);				
+					}while(!escape && buffer.existsUnsent());				
 					
 				}else if(e.isError()){
 					//if the event is actually in error, pretend we didn't get it and keep trying to send the buffer
 					boolean escape = false;
 					do{	
-						if(buffer.nextUnsent != -1){
+						if(buffer.existsUnsent()){
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
-							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+							//stop transmitting if there's an event to process
 							if(currentTimeInS >= eventScheduler.getNextTime()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);				
+					}while(!escape && buffer.existsUnsent());				
 					
 				}
 			}else{
@@ -144,27 +175,26 @@ public class GBNSender {
 					seqNumber = (seqNumber+1)%(bufferSize+1);
 				}
 				
+				//set new timeout and start trying to send them
 				eventScheduler.purgeTimeouts();
 				eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 				boolean escape = false;
 				do{	
-					if(buffer.nextUnsent != -1){
+					if(buffer.existsUnsent()){
 						eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 						currentTimeInS = currentTimeInS + frameTransmitInS;	
-						//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
+						//stop transmitting if there's an event to process
 						if(currentTimeInS >= eventScheduler.getNextTime()){
 							escape = true;
 						}
 					}
 					
-				}while(!escape && buffer.nextUnsent != -1);					
-				
-				
-				//if there's an event that occurs during processing break and let handler get it
+				}while(!escape && buffer.existsUnsent());					
 			}
 			
 		}
-		return (count*packetSizeInBits)/(currentTimeInS); //returns throughput in bps
+		//returns throughput in bps
+		return (count*packetSizeInBits)/(currentTimeInS); 
 		
 	}
 

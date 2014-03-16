@@ -1,0 +1,153 @@
+package lab2.simulate;
+
+/**
+ * Simple ds to represent the buffer
+ * This linked list should always have size elements, but all of them could be "null" Frames
+ * @author Kyle
+ *
+ */
+public class Buffer {
+	
+	public enum Status {
+	    NULL(-1), UNSENT(-2), START(0);
+
+	    private final int id;
+	    Status(int id) { this.id = id; }
+	    public int getValue() { return id; }
+	} 
+	
+	class Frame{
+		
+		public int sn;
+		public double size;
+		public double time;
+		
+		Frame(int sn, double size, double time){
+			this.sn = sn;
+			this.size = size;
+			this.time = time;
+		}
+		
+		Frame(){
+			sn = Status.NULL.getValue();
+			size = Status.NULL.getValue();
+			time = Status.NULL.getValue();
+		}
+		
+	}
+
+	Frame[] buffer;
+	int head;
+	int nextNull;
+	int nextUnsent;
+	double maxtime;
+	
+	public Buffer(int size, int startSN){
+		
+		if(size > 0){
+			buffer = new Frame[size];
+		}
+		
+		for(int i = 0; i < size; i++){
+			buffer[i] = new Frame();
+		}
+		
+		nextNull = Status.START.getValue();
+		nextUnsent = Status.NULL.getValue();
+		head = Status.START.getValue();
+	}
+	
+	void setNextNull(){
+		if(nextNull == Status.NULL.getValue()) nextNull = head;
+		for(int i = nextNull, n = 0; n < buffer.length; i = (i + 1)%buffer.length, n++){
+			if(buffer[i].sn == Status.NULL.getValue()){
+				nextNull = i;
+				return;
+			}
+		}
+		nextNull = Status.NULL.getValue();
+		
+	}
+	
+	void setNextUnsent(){
+		if(nextUnsent == Status.NULL.getValue()) nextUnsent = head;
+		for(int i = nextUnsent, n = 0; n < buffer.length; i = (i + 1)%buffer.length, n++){
+			if(buffer[i].time == Status.UNSENT.getValue()){
+				nextUnsent = i;
+				return;
+			}
+		}
+		nextUnsent = Status.NULL.getValue();
+	}
+	
+	void setAllUnsent(){
+		for(int i = head, n = 0; i != nextNull && n < buffer.length; i=(i+1)%buffer.length, n++){
+			if(buffer[i].sn != Status.NULL.getValue())
+				buffer[i].time = Status.UNSENT.getValue();
+		}
+		nextUnsent = head;
+	}
+	
+	public Frame getFront(){
+		return buffer[head];
+	}
+	
+	public Frame getN(int n){
+		return buffer[(head + n)%buffer.length];
+	}
+	
+	public int prepareFrame(double size, int seqNumber){
+		if(nextNull == Status.NULL.getValue()) return Status.NULL.getValue();
+		buffer[nextNull] = new Frame(seqNumber, size, Status.UNSENT.getValue()); 
+		if(nextUnsent == Status.NULL.getValue()) nextUnsent = nextNull;
+		setNextNull();
+		return seqNumber;
+	}
+	
+	public int sendNextFrame(double transmissionCompleteTime){
+		if(nextUnsent == Status.NULL.getValue()) return Status.NULL.getValue();
+		buffer[nextUnsent].time = transmissionCompleteTime;
+		maxtime = transmissionCompleteTime;
+		int sn = buffer[nextUnsent].sn;
+		setNextUnsent();
+		return sn;
+	}
+	
+	public void shift(){
+		buffer[head] = new Frame();
+		head = (head + 1)%buffer.length;
+		setNextNull();
+		setNextUnsent();
+	}
+	
+	public void print(){
+		String output = "";
+		for(int n = 0; n < buffer.length; n++ ){
+			output += "[" + buffer[n].sn + ", " + buffer[n].time + "],";
+		}
+		output += " HEAD: " + head + ", ";
+		output += " Next Unsent: " + nextUnsent + ", ";
+		output += " Next Null: " + nextNull;
+		
+		System.out.println(output);
+	}
+
+	public boolean existsUnsent() {
+		return nextUnsent != Status.NULL.getValue();
+	}
+
+	public boolean isFrontNull() {
+		return buffer[head].sn == Status.NULL.getValue();
+	}
+
+	public boolean isFrontUnsent() {
+		return buffer[head].time == Status.UNSENT.getValue();
+	}
+
+	public boolean compareFrontSN(int sn) {
+		return buffer[head].sn == sn;
+	}
+
+	
+
+}

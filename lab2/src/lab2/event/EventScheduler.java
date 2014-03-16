@@ -3,10 +3,16 @@ package lab2.event;
 import java.util.LinkedList;
 import java.util.Queue;
 
+/**
+ * Wrapper for queues to handle the timeout and ack events.
+ * 
+ * @author kolive
+ *
+ */
 public class EventScheduler {
 
 	Queue<Event> eventSet; 
-	Queue<Event> timeoutSet; //a list of all live timeouts
+	Queue<Event> timeoutSet;
 	
 	
 	public EventScheduler(){
@@ -26,6 +32,10 @@ public class EventScheduler {
 		
 	}
 
+	/**
+	 * Returns the next event in time
+	 * @return
+	 */
 	public Event dequeue() {
 		if(timeoutSet.peek() == null && eventSet.peek() == null){
 			return null;
@@ -42,6 +52,10 @@ public class EventScheduler {
 		return null;
 	}
 	
+	/**
+	 * Returns the time of the next event in time
+	 * @return
+	 */
 	public double getNextTime(){
 		if(timeoutSet.peek() == null && eventSet.peek() == null) return Double.MAX_VALUE;
 		else if(eventSet.peek() != null && timeoutSet.peek() != null) return Math.min(eventSet.peek().getTime(), timeoutSet.peek().getTime());
@@ -49,6 +63,9 @@ public class EventScheduler {
 		return eventSet.peek().getTime();
 	}
 
+	/**
+	 * Throws away old timeouts
+	 */
 	public void purgeTimeouts() {
 		timeoutSet = new LinkedList<Event>();
 	}
