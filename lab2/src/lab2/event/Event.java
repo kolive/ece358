@@ -1,5 +1,10 @@
 package lab2.event;
 
+/**
+ * Models an event for simulation
+ * @author kolive
+ *
+ */
 public class Event {
 
 	private EventType type;

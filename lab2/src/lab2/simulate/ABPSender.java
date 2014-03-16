@@ -1,6 +1,13 @@
 package lab2.simulate;
 import lab2.event.*;
 
+/**
+ * ABPSender is a simulator for a one way transmission using ABP retransmission scheme.
+ * Simulation should be started by instantiating with correct params and then calling simulate()
+ * 
+ * @author kolive
+ *
+ */
 public class ABPSender {
 	
 	
@@ -14,6 +21,8 @@ public class ABPSender {
 	
 	public ABPSender(
 			double timeoutInS, double packetSizeInBits, double headerSizeInBits, double linkRateInBPS, double propDelayInS, double bitErrorRate){
+		
+		//setup simulation constants
 		this.timeoutInS = timeoutInS;
 		this.packetSizeInBits = packetSizeInBits;
 		this.headerSizeInBits = headerSizeInBits;
@@ -24,6 +33,14 @@ public class ABPSender {
 		
 	}
 	
+	/**
+	 * Simulates the channel and receiver as one blackbox.
+	 * Channel is a static class which wraps the error and propagation calculations 
+	 *
+	 * @param seqNumber
+	 * @param currentTimeInS
+	 * @return a null event if the frame was simulated to be dropped, otherwise an ACK
+	 */
 	public Event send(int seqNumber, double currentTimeInS){
 		//first stretch of the channel begins after processing the FRAME must take into account time to transmit FRAME
 		Channel.simulate(bitErrorRate, propDelayInS, currentTimeInS + frameTransmitInS, packetSizeInBits + headerSizeInBits);
@@ -43,15 +60,24 @@ public class ABPSender {
 		return new Event(EventType.ACK, Channel.getLastTime(), (seqNumber+1)%2, forwardError || reverseError );
 	}
 	
-	//returns throughput
+	/**
+	 * Simulates the transmission of identical packets using ABP retransmission scheme.
+	 * Returns the throughput of the scheme in bps 
+	 * 
+	 * @param successfulArrivals is the count of packets that must be received and ack'd before the simulation is complete
+	 * @param nackEnabled flag to enable or disable NACK functionality
+	 * @return a double, representing the throughput of the scheme in bits per second
+	 */
 	public double simulate(int successfulArrivals, boolean nackEnabled){
 		
+		//init simulation constants
 		Event e;
 		int count = 0;
 		int seqNumber = 0;
 		double currentTimeInS = 0;
 		EventScheduler eventScheduler = new EventScheduler();
 		
+		//main simulation loop
 		while( count < successfulArrivals ){
 			//process next event
 			e = eventScheduler.dequeue();
@@ -67,7 +93,7 @@ public class ABPSender {
 					eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					
 				}else if(!e.isError()){
-					//if the rn == sn then packet recieved success
+					//if the rn == sn then packet received success
 					if(e.getSN() == seqNumber){
 						
 						count++;
@@ -78,7 +104,7 @@ public class ABPSender {
 						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 						
 					}else if(nackEnabled){
-						//if recieved a nack, then don't wait for timeout to resend
+						//if received a nack, then don't wait for timeout to resend
 						seqNumber = e.getSN(); //sn = rn
 						eventScheduler.queue(send(seqNumber, currentTimeInS));		
 						seqNumber = (seqNumber+1) % 2;
@@ -86,7 +112,7 @@ public class ABPSender {
 						eventScheduler.queue(new Event(EventType.TO, currentTimeInS+timeoutInS+frameTransmitInS));	
 					}
 				}else if(nackEnabled && e.isError()){
-					//if recieved a nack, then don't wait for timeout to resend
+					//if received a nack, then don't wait for timeout to resend
 					seqNumber = e.getSN(); //sn = rn
 					eventScheduler.queue(send(seqNumber, currentTimeInS));		
 					seqNumber = (seqNumber+1) % 2;
@@ -102,7 +128,8 @@ public class ABPSender {
 			}
 			
 		}
-		return (count*packetSizeInBits)/(currentTimeInS); //returns throughput in bps
+		//returns throughput in bps
+		return (count*packetSizeInBits)/(currentTimeInS); 
 		
 	}
 
