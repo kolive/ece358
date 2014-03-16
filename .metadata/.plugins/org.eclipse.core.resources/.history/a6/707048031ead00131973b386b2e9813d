@@ -87,6 +87,7 @@ public class ABPSender {
 					currentTimeInS = e.getTime();
 					
 					//if there's a timeout, send the new packet and then register the new timeout
+					//if there's a timeout, send the new packet and then register the new timeout
                     eventScheduler.queue(send((seqNumber-1)%2, currentTimeInS));  
                     eventScheduler.purgeTimeouts();
 
