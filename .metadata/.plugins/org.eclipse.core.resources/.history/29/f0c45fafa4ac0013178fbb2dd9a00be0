@@ -75,12 +75,12 @@ public class GBNSender {
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
 							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
-							if(currentTimeInS >= eventScheduler.getNextTime()){
+							if(currentTimeInS >= eventScheduler.getNextAck()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);		
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
 					
 		
 				}else if(!e.isError()){
@@ -112,12 +112,12 @@ public class GBNSender {
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
 							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
-							if(currentTimeInS >= eventScheduler.getNextTime()){
+							if(currentTimeInS >= eventScheduler.getNextAck()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);				
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
 					
 				}else if(e.isError()){
 					//if the event is actually in error, pretend we didn't get it and keep trying to send the buffer
@@ -127,12 +127,12 @@ public class GBNSender {
 							eventScheduler.queue(send(buffer.sendNextFrame(currentTimeInS + frameTransmitInS), currentTimeInS));
 							currentTimeInS = currentTimeInS + frameTransmitInS;	
 							//if there's an ACK that happens after this guy but before I can start the next guy, process the ack
-							if(currentTimeInS >= eventScheduler.getNextTime()){
+							if(currentTimeInS >= eventScheduler.getNextAck()){
 								escape = true;
 							}
 						}
 						
-					}while(!escape && buffer.nextUnsent != -1);				
+					}while(!escape && buffer.nextUnsent != -1 && eventScheduler.getNextTimeout() > currentTimeInS + frameTransmitInS);			
 					
 				}
 			}else{
